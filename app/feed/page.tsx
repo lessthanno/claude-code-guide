@@ -9,24 +9,12 @@ export default function FeedPage() {
   const allPosts = getAllPosts()
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
+    <div className="layout-root">
       <Sidebar />
 
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+      <div className="layout-body">
         {/* Top bar */}
-        <header style={{
-          borderBottom: '1px solid var(--border)',
-          padding: '0 32px',
-          height: '52px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          position: 'sticky',
-          top: 0,
-          background: 'var(--bg)',
-          zIndex: 10,
-          flexShrink: 0,
-        }}>
+        <header className="layout-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '16px' }}>⚡</span>
             <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)' }}>动态 Feed</span>
@@ -42,9 +30,9 @@ export default function FeedPage() {
           }}>⭐️ Pro</a>
         </header>
 
-        <div style={{ display: 'flex', flex: 1, minWidth: 0 }}>
+        <div className="layout-row">
           {/* Main feed */}
-          <main style={{ flex: 1, minWidth: 0, padding: '0 32px', maxWidth: '720px' }}>
+          <main className="layout-main">
             {/* Channel filter tabs */}
             <div style={{
               display: 'flex',
@@ -75,15 +63,7 @@ export default function FeedPage() {
           </main>
 
           {/* Right panel */}
-          <aside style={{
-            width: '280px',
-            minWidth: '280px',
-            padding: '24px 0 24px 24px',
-            borderLeft: '1px solid var(--border)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '24px',
-          }}>
+          <aside className="layout-aside">
             {/* Pro CTA */}
             <div style={{
               background: 'var(--bg2)',

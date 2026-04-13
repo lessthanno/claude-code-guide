@@ -8,7 +8,7 @@ export default function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside style={{
+    <aside className="layout-sidebar" style={{
       width: '240px',
       minWidth: '240px',
       background: 'var(--bg2)',

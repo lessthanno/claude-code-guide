@@ -75,6 +75,115 @@ pre {
   color: #c8c0b4;
 }
 
+/* ─── PC Responsive Layout ─────────────────────────────────── */
+
+/* Root shell: centers everything, max-width on ultra-wide */
+.layout-root {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+  position: relative;
+}
+
+/* The column to the right of the sidebar */
+.layout-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Horizontal row: main feed + optional right aside */
+.layout-row {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Center column */
+.layout-main {
+  flex: 1;
+  min-width: 0;
+  padding: 0 32px;
+  max-width: 720px;
+}
+
+/* Right panel */
+.layout-aside {
+  width: 280px;
+  min-width: 280px;
+  flex-shrink: 0;
+  padding: 24px 0 24px 24px;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Article body */
+.article-main {
+  flex: 1;
+  max-width: 760px;
+  padding: 48px 40px;
+}
+
+/* Article TOC sidebar */
+.article-toc {
+  width: 220px;
+  min-width: 220px;
+  padding: 48px 24px;
+  position: sticky;
+  top: 52px;
+  height: fit-content;
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+
+/* ─── Breakpoints ───────────────────────────────────────────── */
+
+/* Narrow desktop / tablet: hide right panel */
+@media (max-width: 1280px) {
+  .layout-aside { display: none; }
+  .layout-main  { max-width: 800px; }
+  .article-toc  { display: none; }
+}
+
+/* Tablet: tighter padding */
+@media (max-width: 1024px) {
+  .layout-main  { padding: 0 20px; max-width: 100%; }
+  .article-main { padding: 32px 24px; }
+}
+
+/* Mobile: hide sidebar */
+@media (max-width: 768px) {
+  .layout-sidebar { display: none; }
+  .layout-main    { padding: 0 16px; }
+  .article-main   { padding: 24px 16px; }
+}
+
+/* Sticky header full-width at any size */
+.layout-header {
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .layout-header { padding: 0 16px; }
+}
+
+/* ─── Prose in MDX ──────────────────────────────────────────── */
 /* Prose in MDX */
 .prose h2 { color: var(--text); font-size: 19px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
 .prose h3 { color: var(--text); font-size: 15px; font-weight: 600; margin: 20px 0 8px; }

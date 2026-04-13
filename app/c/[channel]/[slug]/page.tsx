@@ -44,24 +44,12 @@ export default async function PostPage({
   })()
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
+    <div className="layout-root">
       <Sidebar />
 
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="layout-body">
         {/* Top bar */}
-        <header style={{
-          borderBottom: '1px solid var(--border)',
-          padding: '0 32px',
-          height: '52px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          position: 'sticky',
-          top: 0,
-          background: 'var(--bg)',
-          zIndex: 10,
-          flexShrink: 0,
-        }}>
+        <header className="layout-header" style={{ gap: '8px', justifyContent: 'flex-start' }}>
           <Link href={`/c/${ch}`} style={{ color: 'var(--text3)', textDecoration: 'none', fontSize: '13px' }}>
             {meta.emoji} {meta.label}
           </Link>
@@ -71,9 +59,9 @@ export default async function PostPage({
           </span>
         </header>
 
-        <div style={{ display: 'flex' }}>
+        <div className="layout-row">
           {/* Article */}
-          <main style={{ flex: 1, maxWidth: '760px', padding: '48px 40px' }}>
+          <main className="article-main">
             {/* Article header */}
             <div style={{ marginBottom: '40px', paddingBottom: '32px', borderBottom: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
@@ -196,14 +184,7 @@ export default async function PostPage({
           </main>
 
           {/* TOC sidebar */}
-          <aside style={{
-            width: '220px',
-            minWidth: '220px',
-            padding: '48px 24px',
-            position: 'sticky',
-            top: 0,
-            height: 'fit-content',
-          }}>
+          <aside className="article-toc">
             <div style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text3)', marginBottom: '12px' }}>
               本频道其他内容
             </div>
@@ -230,3 +211,4 @@ export default async function PostPage({
     </div>
   )
 }
+
