@@ -4,11 +4,7 @@ import { getAllPosts, CHANNEL_META, Channel } from '@/lib/content'
 
 const CHANNELS = ['daily', 'mental-models', 'templates', 'community'] as Channel[]
 
-export default function FeedPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ channel?: string }>
-}) {
+export default function FeedPage() {
   const allPosts = getAllPosts()
 
   return (
