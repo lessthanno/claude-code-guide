@@ -98,7 +98,7 @@ export default function Sidebar() {
         padding: '12px 0',
       }}>
         <NavLink href="https://github.com" external emoji="⬡">GitHub 开源</NavLink>
-        <NavLink href="https://x.com" external emoji="𝕏">关注作者</NavLink>
+        <NavLink href="https://x.com/0xhaoxyz" external emoji="𝕏">关注作者</NavLink>
       </div>
     </aside>
   )
