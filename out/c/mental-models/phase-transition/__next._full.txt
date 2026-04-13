@@ -1,0 +1,133 @@
+1:"$Sreact.fragment"
+2:I[70111,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js"],"default"]
+3:I[40828,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js"],"default"]
+5:I[96396,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js"],"OutletBoundary"]
+6:"$Sreact.suspense"
+9:I[96396,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js"],"ViewportBoundary"]
+b:I[96396,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js"],"MetadataBoundary"]
+d:I[24360,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js"],"default",1]
+:HL["/claude-code-guide/_next/static/chunks/0olh04qo4q38_.css","style"]
+0:{"P":null,"c":["","c","mental-models","phase-transition",""],"q":"","i":false,"f":[[["",{"children":["c",{"children":[["channel","mental-models","d",null],{"children":[["slug","phase-transition","d",null],{"children":["__PAGE__",{}]}]}]}]},"$undefined","$undefined",16],[["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/claude-code-guide/_next/static/chunks/0olh04qo4q38_.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}],["$","script","script-0",{"src":"/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","async":true,"nonce":"$undefined"}],["$","script","script-1",{"src":"/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js","async":true,"nonce":"$undefined"}]],["$","html",null,{"lang":"zh","children":["$","body",null,{"style":{"margin":0,"minHeight":"100vh","background":"var(--bg)"},"children":["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]],"forbidden":"$undefined","unauthorized":"$undefined"}]}]}]]}],{"children":[["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]]}],{"children":[["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]]}],{"children":[["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]]}],{"children":[["$","$1","c",{"children":["$L4",[["$","script","script-0",{"src":"/claude-code-guide/_next/static/chunks/0r~xksys6ds~4.js","async":true,"nonce":"$undefined"}]],["$","$L5",null,{"children":["$","$6",null,{"name":"Next.MetadataOutlet","children":"$@7"}]}]]}],{},null,false,null]},null,false,"$@8"]},null,false,"$@8"]},null,false,"$@8"]},null,false,null],["$","$1","h",{"children":[null,["$","$L9",null,{"children":"$La"}],["$","div",null,{"hidden":true,"children":["$","$Lb",null,{"children":["$","$6",null,{"name":"Next.Metadata","children":"$Lc"}]}]}],null]}],false]],"m":"$undefined","G":["$d",[["$","link","0",{"rel":"stylesheet","href":"/claude-code-guide/_next/static/chunks/0olh04qo4q38_.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]]],"S":true,"h":null,"s":"$undefined","l":"$undefined","p":"$undefined","d":"$undefined","b":"XdoT_a2sWjwkXWHT6oVz4"}
+e:[]
+8:"$We"
+f:I[16093,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js","/claude-code-guide/_next/static/chunks/0r~xksys6ds~4.js"],"default"]
+10:I[5232,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js","/claude-code-guide/_next/static/chunks/0r~xksys6ds~4.js"],""]
+11:T1536,
+
+<div class="concept" id="phase">
+    <div class="concept-header">
+      <div class="concept-num">03</div>
+      <div class="concept-title-block">
+        <h2>相变 · Phase Transition</h2>
+        <div class="concept-subtitle">统计物理 · 用于发现系统临界点</div>
+      </div>
+      <span class="domain-badge tag-phys">物理</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心直觉</div>
+      <div class="formula">水在 99°C → 100°C 发生质变，不是量变
+Agent 系统在某个临界点发生质变，不是线性退化
+
+关键：找到你系统的相变点，在它之前设置硬限制
+永远不要做线性外推（"再多加一点应该没问题"）</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Claude Code 中的三类相变点</div>
+      <table class="decision-table">
+        <tr><th>变量</th><th>相变表现</th><th>典型临界点</th><th>处理方式</th></tr>
+        <tr>
+          <td>Context 长度</td>
+          <td>质量从 8/10 突然跌到 3/10</td>
+          <td class="signal">~60-80% 窗口上限</td>
+          <td class="action">硬截断 + 摘要压缩</td>
+        </tr>
+        <tr>
+          <td>Prompt 复杂度</td>
+          <td>模型开始幻觉、跳过指令</td>
+          <td class="signal">约 15+ 条规则</td>
+          <td class="action">分层 prompt + 子 agent</td>
+        </tr>
+        <tr>
+          <td>并发 Agent 数量</td>
+          <td>协调延迟 > 并行收益</td>
+          <td class="signal">通信复杂度 O(n²) 拐点</td>
+          <td class="action">分组 + 层级编排</td>
+        </tr>
+        <tr>
+          <td>Retry 次数</td>
+          <td>质量不再提升，开始循环</td>
+          <td class="signal">3-5 次</td>
+          <td class="action">切换策略，不增加次数</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — 主动探测相变点</div>
+      <div class="code-header">
+        <span>phase-detector.ts</span>
+        <span>压力测试工具</span>
+      </div>
+<pre><span class="cm">// 主动探测 Context 相变点</span>
+<span class="kw">async function</span> <span class="fn">findPhaseTransition</span>(
+  basePrompt: <span class="kw">string</span>,
+  targetTask: <span class="kw">string</span>,
+) {
+  <span class="kw">const</span> results: { tokens: <span class="kw">number</span>; quality: <span class="kw">number</span> }[] = [];
+  <span class="kw">const</span> tokenLevels = [<span class="num">1000</span>, <span class="num">2000</span>, <span class="num">4000</span>, <span class="num">8000</span>, <span class="num">16000</span>, <span class="num">32000</span>];
+
+  <span class="kw">for</span> (<span class="kw">const</span> tokens <span class="kw">of</span> tokenLevels) {
+    <span class="kw">const</span> paddedPrompt = <span class="fn">padToTokens</span>(basePrompt, tokens);
+    <span class="kw">const</span> quality = <span class="kw">await</span> <span class="fn">evaluateQuality</span>(paddedPrompt, targetTask);
+    results.<span class="fn">push</span>({ tokens, quality });
+    
+    <span class="cm">// 检测相变：质量突然下降超过 30%</span>
+    <span class="kw">if</span> (results.length > <span class="num">1</span>) {
+      <span class="kw">const</span> prev = results[results.length - <span class="num">2</span>];
+      <span class="kw">const</span> drop = (prev.quality - quality) / prev.quality;
+      
+      <span class="kw">if</span> (drop > <span class="num">0.3</span>) {
+        console.<span class="fn">log</span>(<span class="str">`⚡ 相变点发现: ${tokens} tokens`</span>);
+        console.<span class="fn">log</span>(<span class="str">`   质量从 ${prev.quality.toFixed(1)} 跌至 ${quality.toFixed(1)}`</span>);
+        console.<span class="fn">log</span>(<span class="str">`   建议硬限制: ${prev.tokens} tokens`</span>);
+        <span class="kw">break</span>;
+      }
+    }
+  }
+
+  <span class="kw">return</span> results;
+}
+
+<span class="cm">// 在系统中设置硬限制（不是软限制）</span>
+<span class="kw">const</span> CONTEXT_HARD_LIMIT = <span class="num">6000</span>; <span class="cm">// 实测相变点 × 0.75</span>
+
+<span class="kw">function</span> <span class="fn">safeContext</span>(messages: Message[]): Message[] {
+  <span class="kw">const</span> totalTokens = <span class="fn">countTokens</span>(messages);
+  <span class="kw">if</span> (totalTokens &lt;= CONTEXT_HARD_LIMIT) <span class="kw">return</span> messages;
+  
+  <span class="cm">// 不是线性截断，是结构化压缩</span>
+  <span class="kw">return</span> [
+    messages[<span class="num">0</span>],                          <span class="cm">// system prompt 保留</span>
+    ...<span class="fn">summarizeMiddle</span>(messages.<span class="fn">slice</span>(<span class="num">1</span>, -<span class="num">4</span>)), <span class="cm">// 中间压缩</span>
+    ...messages.<span class="fn">slice</span>(-<span class="num">4</span>),                  <span class="cm">// 最近 4 条保留</span>
+  ];
+}</pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式</strong>
+      发现 10 个 agent 开始变慢，加到 12 个试试。这是线性外推思维。相变之后增加更多只会加剧问题，因为协调成本是 O(n²) 的。
+    </div>
+  </div>
+
+  <!-- ===== 04 PID ===== -->
+  
+4:["$","div",null,{"className":"layout-root","children":[["$","$Lf",null,{}],["$","div",null,{"className":"layout-body","children":[["$","header",null,{"className":"layout-header","style":{"gap":"8px","justifyContent":"flex-start"},"children":[["$","$L10",null,{"href":"/c/mental-models","style":{"color":"var(--text3)","textDecoration":"none","fontSize":"13px"},"children":["📐"," ","思维模型手册"]}],["$","span",null,{"style":{"color":"var(--border2)","fontSize":"13px"},"children":"/"}],["$","span",null,{"style":{"fontSize":"13px","color":"var(--text2)","overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":"相变 · Phase Transition"}]]}],["$","div",null,{"className":"layout-row","children":[["$","main",null,{"className":"article-main","children":[["$","div",null,{"style":{"marginBottom":"40px","paddingBottom":"32px","borderBottom":"1px solid var(--border)"},"children":[["$","div",null,{"style":{"display":"flex","alignItems":"center","gap":"8px","marginBottom":"16px"},"children":[["$","span",null,{"style":{"fontSize":"10px","padding":"2px 7px","borderRadius":"4px","fontWeight":600,"color":"#8b6fb5","background":"#1a1520","letterSpacing":"0.05em","textTransform":"uppercase"},"children":"物理学"}],false,["$","span",null,{"style":{"marginLeft":"auto","fontSize":"12px","color":"var(--text3)"},"children":"12 天前"}]]}],["$","h1",null,{"style":{"fontSize":"24px","fontWeight":700,"color":"var(--text)","letterSpacing":"-0.02em","lineHeight":1.3,"marginBottom":"8px"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","fontSize":"13px","color":"var(--text3)","marginRight":"10px"},"children":"03"}],"相变 · Phase Transition"]}],["$","div",null,{"style":{"fontSize":"14px","color":"var(--text3)","letterSpacing":"0.04em","marginTop":"4px"},"children":"统计物理 · 用于发现系统临界点"}],["$","div",null,{"style":{"display":"flex","gap":"6px","marginTop":"14px","flexWrap":"wrap"},"children":[["$","span","system-design",{"style":{"fontSize":"11px","padding":"2px 8px","borderRadius":"20px","border":"1px solid var(--border2)","color":"var(--text3)"},"children":["#","system-design"]}]]}]]}],["$","div",null,{"className":"prose","dangerouslySetInnerHTML":{"__html":"$11"},"style":{"marginBottom":"48px"}}],"$undefined","$L12"]}],"$L13"]}]]}]]}]
+12:["$","div",null,{"style":{"display":"flex","justifyContent":"space-between","gap":"16px","paddingTop":"24px","borderTop":"1px solid var(--border)"},"children":[["$","$L10",null,{"href":"/c/mental-models/pid-controller","style":{"color":"var(--text2)","textDecoration":"none","fontSize":"13px","display":"flex","flexDirection":"column","gap":"4px"},"children":[["$","span",null,{"style":{"fontSize":"11px","color":"var(--text3)"},"children":"← 上一篇"}],["$","span",null,{"children":"PID 控制器 · PID Controller"}]]}],["$","$L10",null,{"href":"/c/mental-models/pareto-front","style":{"color":"var(--text2)","textDecoration":"none","fontSize":"13px","display":"flex","flexDirection":"column","gap":"4px","textAlign":"right"},"children":[["$","span",null,{"style":{"fontSize":"11px","color":"var(--text3)"},"children":"下一篇 →"}],["$","span",null,{"children":"帕累托前沿 · Pareto Front"}]]}]]}]
+13:["$","aside",null,{"className":"article-toc","children":[["$","div",null,{"style":{"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--text3)","marginBottom":"12px"},"children":"本频道其他内容"}],[["$","$L10","antipatterns",{"href":"/c/mental-models/antipatterns","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"Ref"}],"反模式对照表"]}],["$","$L10","fourier-decomposition",{"href":"/c/mental-models/fourier-decomposition","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"02"}],"傅里叶分解"]}],["$","$L10","pareto-front",{"href":"/c/mental-models/pareto-front","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"07"}],"帕累托前沿"]}],["$","$L10","phase-transition",{"href":"/c/mental-models/phase-transition","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--accent)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":500,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"03"}],"相变"]}],["$","$L10","pid-controller",{"href":"/c/mental-models/pid-controller","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"04"}],"PID 控制器"]}],["$","$L10","shannon-entropy",{"href":"/c/mental-models/shannon-entropy","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"06"}],"香农熵"]}],["$","$L10","signal-table",{"href":"/c/mental-models/signal-table","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"Ref"}],"识别信号表"]}],["$","$L10","simulated-annealing",{"href":"/c/mental-models/simulated-annealing","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"01"}],"模拟退火"]}]]]}]
+a:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
+14:I[1095,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js"],"IconMark"]
+7:null
+c:[["$","title","0",{"children":"知识积累 · 工程师社群"}],["$","meta","1",{"name":"description","content":"工程实践中的思考与沉淀 — 思维模型、实战模板、AI 编程、每日动态"}],["$","link","2",{"rel":"icon","href":"/claude-code-guide/favicon.ico?favicon.0x3dzn~oxb6tn.ico","sizes":"256x256","type":"image/x-icon"}],["$","$L14","3",{}]]

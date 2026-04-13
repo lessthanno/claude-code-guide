@@ -1,0 +1,126 @@
+1:"$Sreact.fragment"
+2:I[16093,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js","/claude-code-guide/_next/static/chunks/0r~xksys6ds~4.js"],"default"]
+3:I[5232,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js","/claude-code-guide/_next/static/chunks/0r~xksys6ds~4.js"],""]
+9:I[96396,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js"],"OutletBoundary"]
+a:"$Sreact.suspense"
+4:T169f,
+
+<div class="concept" id="pid">
+    <div class="concept-header">
+      <div class="concept-num">04</div>
+      <div class="concept-title-block">
+        <h2>PID 控制器 · PID Controller</h2>
+        <div class="concept-subtitle">经典控制论 · 用于 Agent 输出质量反馈</div>
+      </div>
+      <span class="domain-badge tag-ctrl">控制</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心公式</div>
+      <div class="formula">u(t) = Kp·e(t)  +  Ki·∫e(t)dt  +  Kd·de/dt
+
+e(t)    = 误差 = 目标分数 − 实际分数
+Kp·e    = P 项：当前这次差多少 → 立即修正
+Ki·∫e   = I 项：历史误差积累 → 系统性修正
+Kd·de   = D 项：误差变化速度 → 预判式修正</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">三项的工程映射</div>
+      <table class="decision-table">
+        <tr><th>PID 项</th><th>信号</th><th>Claude Code 中的动作</th></tr>
+        <tr>
+          <td><strong>P（当前误差）</strong></td>
+          <td class="signal">这次输出得 4/10</td>
+          <td class="action">立刻修改这次的 prompt 措辞/结构</td>
+        </tr>
+        <tr>
+          <td><strong>I（历史积累）</strong></td>
+          <td class="signal">最近 10 次平均 5.5/10</td>
+          <td class="action">重写 system prompt，修改 CLAUDE.md 的 agent 规则</td>
+        </tr>
+        <tr>
+          <td><strong>D（变化趋势）</strong></td>
+          <td class="signal">得分从 7→6→5，趋势在恶化</td>
+          <td class="action">预判性重构，不等质量崩溃再改</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — Agent 质量反馈系统</div>
+      <div class="code-header">
+        <span>quality-feedback.ts</span>
+        <span>XerpaAI Agent</span>
+      </div>
+<pre><span class="kw">class</span> <span class="var">AgentQualityPID</span> {
+  <span class="kw">private</span> history: <span class="kw">number</span>[] = [];
+  <span class="kw">private</span> kp = <span class="num">0.5</span>, ki = <span class="num">0.1</span>, kd = <span class="num">0.3</span>;
+  <span class="kw">private</span> target = <span class="num">8.5</span>;
+
+  <span class="fn">record</span>(score: <span class="kw">number</span>): <span class="var">CorrectiveAction</span> {
+    this.history.<span class="fn">push</span>(score);
+    
+    <span class="kw">const</span> e = this.target - score;                           <span class="cm">// 当前误差</span>
+    <span class="kw">const</span> recentHistory = this.history.<span class="fn">slice</span>(-<span class="num">10</span>);
+    <span class="kw">const</span> I = recentHistory.<span class="fn">reduce</span>((s, v) => s + (this.target - v), <span class="num">0</span>);
+    <span class="kw">const</span> D = this.history.length > <span class="num">1</span>
+      ? score - this.history[this.history.length - <span class="num">2</span>]  <span class="cm">// 正数=改善，负数=恶化</span>
+      : <span class="num">0</span>;
+    
+    <span class="kw">const</span> signal = this.kp * e + this.ki * I - this.kd * D;
+
+    <span class="cm">// 决策逻辑</span>
+    <span class="kw">if</span> (Math.<span class="fn">abs</span>(e) > <span class="num">3</span>) <span class="kw">return</span> {
+      type: <span class="str">'immediate'</span>,
+      action: <span class="str">'rewrite_user_prompt'</span>,    <span class="cm">// P 大：立即修这次</span>
+      reason: <span class="str">`Score ${score} vs target ${this.target}`</span>
+    };
+
+    <span class="kw">if</span> (I > <span class="num">8</span>) <span class="kw">return</span> {
+      type: <span class="str">'systemic'</span>,
+      action: <span class="str">'update_system_prompt'</span>,    <span class="cm">// I 大：系统性问题</span>
+      reason: <span class="str">`Accumulated error: ${I.toFixed(1)}`</span>
+    };
+
+    <span class="kw">if</span> (D &lt; -<span class="num">1</span>) <span class="kw">return</span> {
+      type: <span class="str">'preemptive'</span>,
+      action: <span class="str">'restructure_agent_pipeline'</span>, <span class="cm">// D 负：趋势恶化</span>
+      reason: <span class="str">`Quality trending down: ${D.toFixed(2)}/call`</span>
+    };
+
+    <span class="kw">return</span> { type: <span class="str">'none'</span>, action: <span class="str">'continue'</span> };
+  }
+}
+
+<span class="cm">// 用法：在 agent 每次执行后记录</span>
+<span class="kw">const</span> pid = <span class="kw">new</span> <span class="var">AgentQualityPID</span>();
+<span class="kw">const</span> result = <span class="kw">await</span> agent.<span class="fn">run</span>(task);
+<span class="kw">const</span> action = pid.<span class="fn">record</span>(<span class="kw">await</span> <span class="fn">evaluate</span>(result));
+<span class="kw">if</span> (action.type !== <span class="str">'none'</span>) <span class="fn">handleCorrection</span>(action);</pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式（只看 P）</strong>
+      每次输出差了就改措辞，从不看历史趋势。结果是过度修正——像没有 D 项的控制器，会在目标附近震荡，无法稳定收敛。
+    </div>
+
+    <div class="quick-ref">
+      <h4>调参直觉</h4>
+      <ul>
+        <li>Kp 太高：修正过猛，质量在目标附近上下震荡</li>
+        <li>Ki 太高：对历史误差太敏感，频繁触发"系统性重写"</li>
+        <li>Kd 太高：对趋势过于敏感，还没到问题就开始重构</li>
+        <li>推荐起点：Kp=0.5, Ki=0.1, Kd=0.3，根据实际震荡情况调整</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== 05 奇异吸引子 ===== -->
+  
+0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"layout-root","children":[["$","$L2",null,{}],["$","div",null,{"className":"layout-body","children":[["$","header",null,{"className":"layout-header","style":{"gap":"8px","justifyContent":"flex-start"},"children":[["$","$L3",null,{"href":"/c/mental-models","style":{"color":"var(--text3)","textDecoration":"none","fontSize":"13px"},"children":["📐"," ","思维模型手册"]}],["$","span",null,{"style":{"color":"var(--border2)","fontSize":"13px"},"children":"/"}],["$","span",null,{"style":{"fontSize":"13px","color":"var(--text2)","overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":"PID 控制器 · PID Controller"}]]}],["$","div",null,{"className":"layout-row","children":[["$","main",null,{"className":"article-main","children":[["$","div",null,{"style":{"marginBottom":"40px","paddingBottom":"32px","borderBottom":"1px solid var(--border)"},"children":[["$","div",null,{"style":{"display":"flex","alignItems":"center","gap":"8px","marginBottom":"16px"},"children":[["$","span",null,{"style":{"fontSize":"10px","padding":"2px 7px","borderRadius":"4px","fontWeight":600,"color":"#4a7ab5","background":"#0d1525","letterSpacing":"0.05em","textTransform":"uppercase"},"children":"控制论"}],false,["$","span",null,{"style":{"marginLeft":"auto","fontSize":"12px","color":"var(--text3)"},"children":"12 天前"}]]}],["$","h1",null,{"style":{"fontSize":"24px","fontWeight":700,"color":"var(--text)","letterSpacing":"-0.02em","lineHeight":1.3,"marginBottom":"8px"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","fontSize":"13px","color":"var(--text3)","marginRight":"10px"},"children":"04"}],"PID 控制器 · PID Controller"]}],["$","div",null,{"style":{"fontSize":"14px","color":"var(--text3)","letterSpacing":"0.04em","marginTop":"4px"},"children":"经典控制论 · 用于 Agent 输出质量反馈"}],["$","div",null,{"style":{"display":"flex","gap":"6px","marginTop":"14px","flexWrap":"wrap"},"children":[["$","span","agent",{"style":{"fontSize":"11px","padding":"2px 8px","borderRadius":"20px","border":"1px solid var(--border2)","color":"var(--text3)"},"children":["#","agent"]}],["$","span","feedback",{"style":{"fontSize":"11px","padding":"2px 8px","borderRadius":"20px","border":"1px solid var(--border2)","color":"var(--text3)"},"children":["#","feedback"]}]]}]]}],["$","div",null,{"className":"prose","dangerouslySetInnerHTML":{"__html":"$4"},"style":{"marginBottom":"48px"}}],"$undefined","$L5"]}],"$L6"]}]]}]]}],["$L7"],"$L8"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"XdoT_a2sWjwkXWHT6oVz4"}
+5:["$","div",null,{"style":{"display":"flex","justifyContent":"space-between","gap":"16px","paddingTop":"24px","borderTop":"1px solid var(--border)"},"children":[["$","$L3",null,{"href":"/c/mental-models/shannon-entropy","style":{"color":"var(--text2)","textDecoration":"none","fontSize":"13px","display":"flex","flexDirection":"column","gap":"4px"},"children":[["$","span",null,{"style":{"fontSize":"11px","color":"var(--text3)"},"children":"← 上一篇"}],["$","span",null,{"children":"香农熵 · Shannon Entropy"}]]}],["$","$L3",null,{"href":"/c/mental-models/phase-transition","style":{"color":"var(--text2)","textDecoration":"none","fontSize":"13px","display":"flex","flexDirection":"column","gap":"4px","textAlign":"right"},"children":[["$","span",null,{"style":{"fontSize":"11px","color":"var(--text3)"},"children":"下一篇 →"}],["$","span",null,{"children":"相变 · Phase Transition"}]]}]]}]
+6:["$","aside",null,{"className":"article-toc","children":[["$","div",null,{"style":{"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--text3)","marginBottom":"12px"},"children":"本频道其他内容"}],[["$","$L3","antipatterns",{"href":"/c/mental-models/antipatterns","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"Ref"}],"反模式对照表"]}],["$","$L3","fourier-decomposition",{"href":"/c/mental-models/fourier-decomposition","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"02"}],"傅里叶分解"]}],["$","$L3","pareto-front",{"href":"/c/mental-models/pareto-front","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"07"}],"帕累托前沿"]}],["$","$L3","phase-transition",{"href":"/c/mental-models/phase-transition","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"03"}],"相变"]}],["$","$L3","pid-controller",{"href":"/c/mental-models/pid-controller","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--accent)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":500,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"04"}],"PID 控制器"]}],["$","$L3","shannon-entropy",{"href":"/c/mental-models/shannon-entropy","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"06"}],"香农熵"]}],["$","$L3","signal-table",{"href":"/c/mental-models/signal-table","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"Ref"}],"识别信号表"]}],["$","$L3","simulated-annealing",{"href":"/c/mental-models/simulated-annealing","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"01"}],"模拟退火"]}]]]}]
+7:["$","script","script-0",{"src":"/claude-code-guide/_next/static/chunks/0r~xksys6ds~4.js","async":true}]
+8:["$","$L9",null,{"children":["$","$a",null,{"name":"Next.MetadataOutlet","children":"$@b"}]}]
+b:null

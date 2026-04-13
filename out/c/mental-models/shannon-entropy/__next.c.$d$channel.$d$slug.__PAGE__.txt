@@ -1,0 +1,140 @@
+1:"$Sreact.fragment"
+2:I[16093,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js","/claude-code-guide/_next/static/chunks/0r~xksys6ds~4.js"],"default"]
+3:I[5232,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js","/claude-code-guide/_next/static/chunks/0r~xksys6ds~4.js"],""]
+9:I[96396,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js"],"OutletBoundary"]
+a:"$Sreact.suspense"
+4:T1635,
+
+<div class="concept" id="entropy">
+    <div class="concept-header">
+      <div class="concept-num">06</div>
+      <div class="concept-title-block">
+        <h2>香农熵 · Shannon Entropy</h2>
+        <div class="concept-subtitle">信息论 · 用于 Prompt 质量诊断</div>
+      </div>
+      <span class="domain-badge tag-info">信息</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心公式</div>
+      <div class="formula">H = −Σ p(x) · log₂p(x)
+
+熵高 → 输出分布扁平 → prompt 有歧义
+熵低 → 输出分布尖峰 → prompt 很明确
+
+实操：同一个 prompt 跑 5-10 次，观察输出分散程度
+不需要算公式，只需要看输出多样性</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">四级熵诊断</div>
+      <table class="decision-table">
+        <tr><th>症状（跑 5 次后）</th><th>熵级别</th><th>根因</th><th>修复</th></tr>
+        <tr>
+          <td>结构都不一样，甚至有的用中文有的用英文</td>
+          <td class="signal">极高熵</td>
+          <td>prompt 完全歧义</td>
+          <td class="action">重写，加格式约束</td>
+        </tr>
+        <tr>
+          <td>结构相同，内容切角差异很大</td>
+          <td class="signal">高熵</td>
+          <td>任务范围模糊</td>
+          <td class="action">加 few-shot examples</td>
+        </tr>
+        <tr>
+          <td>结构内容相似，但细节不同</td>
+          <td class="signal">中熵</td>
+          <td>正常的创造性变化</td>
+          <td class="action">如果这就是目标，可以接受</td>
+        </tr>
+        <tr>
+          <td>几乎完全相同（95%+）</td>
+          <td class="signal">低熵</td>
+          <td>prompt 过于确定</td>
+          <td class="action">如果需要多样性，放松约束</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — Prompt 熵诊断工具</div>
+      <div class="code-header">
+        <span>entropy-checker.ts</span>
+        <span>Claude Code 脚本</span>
+      </div>
+<pre><span class="cm">// 用于在 Claude Code 中快速诊断 prompt 质量</span>
+<span class="cm">// 运行：cc run check-entropy --prompt="your prompt"</span>
+
+<span class="kw">import</span> { <span class="var">Claude</span> } <span class="kw">from</span> <span class="str">'@anthropic-ai/sdk'</span>;
+
+<span class="kw">async function</span> <span class="fn">diagnosePromptEntropy</span>(
+  prompt: <span class="kw">string</span>,
+  n = <span class="num">5</span>
+): <span class="kw">Promise</span>&lt;<span class="var">EntropDiagnosis</span>&gt; {
+  <span class="kw">const</span> client = <span class="kw">new</span> <span class="var">Claude</span>();
+  
+  <span class="cm">// 并行跑 n 次</span>
+  <span class="kw">const</span> outputs = <span class="kw">await</span> Promise.<span class="fn">all</span>(
+    <span class="var">Array</span>.<span class="fn">from</span>({ length: n }, () =>
+      client.messages.<span class="fn">create</span>({
+        model: <span class="str">'claude-opus-4-5'</span>,
+        max_tokens: <span class="num">500</span>,
+        messages: [{ role: <span class="str">'user'</span>, content: prompt }],
+        temperature: <span class="num">1.0</span>,  <span class="cm">// 使用默认温度，不要降温</span>
+      })
+    )
+  );
+  
+  <span class="kw">const</span> texts = outputs.<span class="fn">map</span>(o => o.content[<span class="num">0</span>].text);
+
+  <span class="cm">// 简单结构相似度：比较段落数、总字数、关键词</span>
+  <span class="kw">const</span> structures = texts.<span class="fn">map</span>(t => ({
+    paragraphs: t.<span class="fn">split</span>(<span class="str">'\n\n'</span>).length,
+    wordCount: t.<span class="fn">split</span>(<span class="str">' '</span>).length,
+    hasCode: t.<span class="fn">includes</span>(<span class="str">'```'</span>),
+    hasNumberedList: <span class="str">/^\d+\./m</span>.<span class="fn">test</span>(t),
+  }));
+
+  <span class="cm">// 计算结构一致性（越接近 1 = 低熵）</span>
+  <span class="kw">const</span> structuralConsistency = <span class="fn">calcConsistency</span>(structures);
+  
+  <span class="kw">return</span> {
+    sampleOutputs: texts,
+    structuralConsistency,         <span class="cm">// 0-1，越高越一致</span>
+    entropyLevel: structuralConsistency > <span class="num">0.8</span> ? <span class="str">'low'</span>
+                : structuralConsistency > <span class="num">0.5</span> ? <span class="str">'medium'</span>
+                : <span class="str">'high'</span>,
+    diagnosis: <span class="fn">diagnose</span>(structures, texts),
+  };
+}
+
+<span class="cm">// 在 Claude Code 工作流中:</span>
+<span class="cm">// cc run diagnose-entropy → 识别问题 → cc run fix-prompt → 再诊断</span></pre>
+    </div>
+
+    <div class="callout callout-tip">
+      <strong>✓ 最快用法</strong>
+      不需要代码。对任何 prompt，脑内运行 3 次，想象输出的结构差异有多大。差异大 → 高熵 → 需要加约束。这个直觉训练 2-3 次就会内化。
+    </div>
+
+    <div class="quick-ref">
+      <h4>降熵工具箱（按效果排序）</h4>
+      <ul>
+        <li>指定输出格式（JSON/Markdown结构/固定段落数）</li>
+        <li>加 2-3 个 few-shot examples（最有效）</li>
+        <li>指定输出长度范围（字数或 token 数）</li>
+        <li>指定视角/角色（"你是...的专家"）</li>
+        <li>加负面示例（"不要像这样..."）</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== 07 帕累托 ===== -->
+  
+0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"layout-root","children":[["$","$L2",null,{}],["$","div",null,{"className":"layout-body","children":[["$","header",null,{"className":"layout-header","style":{"gap":"8px","justifyContent":"flex-start"},"children":[["$","$L3",null,{"href":"/c/mental-models","style":{"color":"var(--text3)","textDecoration":"none","fontSize":"13px"},"children":["📐"," ","思维模型手册"]}],["$","span",null,{"style":{"color":"var(--border2)","fontSize":"13px"},"children":"/"}],["$","span",null,{"style":{"fontSize":"13px","color":"var(--text2)","overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":"香农熵 · Shannon Entropy"}]]}],["$","div",null,{"className":"layout-row","children":[["$","main",null,{"className":"article-main","children":[["$","div",null,{"style":{"marginBottom":"40px","paddingBottom":"32px","borderBottom":"1px solid var(--border)"},"children":[["$","div",null,{"style":{"display":"flex","alignItems":"center","gap":"8px","marginBottom":"16px"},"children":[["$","span",null,{"style":{"fontSize":"10px","padding":"2px 7px","borderRadius":"4px","fontWeight":600,"color":"#a07a30","background":"#1f180d","letterSpacing":"0.05em","textTransform":"uppercase"},"children":"信息论"}],false,["$","span",null,{"style":{"marginLeft":"auto","fontSize":"12px","color":"var(--text3)"},"children":"12 天前"}]]}],["$","h1",null,{"style":{"fontSize":"24px","fontWeight":700,"color":"var(--text)","letterSpacing":"-0.02em","lineHeight":1.3,"marginBottom":"8px"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","fontSize":"13px","color":"var(--text3)","marginRight":"10px"},"children":"06"}],"香农熵 · Shannon Entropy"]}],["$","div",null,{"style":{"fontSize":"14px","color":"var(--text3)","letterSpacing":"0.04em","marginTop":"4px"},"children":"信息论 · 用于 Prompt 质量诊断"}],["$","div",null,{"style":{"display":"flex","gap":"6px","marginTop":"14px","flexWrap":"wrap"},"children":[["$","span","prompt",{"style":{"fontSize":"11px","padding":"2px 8px","borderRadius":"20px","border":"1px solid var(--border2)","color":"var(--text3)"},"children":["#","prompt"]}],["$","span","diagnosis",{"style":{"fontSize":"11px","padding":"2px 8px","borderRadius":"20px","border":"1px solid var(--border2)","color":"var(--text3)"},"children":["#","diagnosis"]}]]}]]}],["$","div",null,{"className":"prose","dangerouslySetInnerHTML":{"__html":"$4"},"style":{"marginBottom":"48px"}}],"$undefined","$L5"]}],"$L6"]}]]}]]}],["$L7"],"$L8"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"XdoT_a2sWjwkXWHT6oVz4"}
+5:["$","div",null,{"style":{"display":"flex","justifyContent":"space-between","gap":"16px","paddingTop":"24px","borderTop":"1px solid var(--border)"},"children":[["$","$L3",null,{"href":"/c/mental-models/signal-table","style":{"color":"var(--text2)","textDecoration":"none","fontSize":"13px","display":"flex","flexDirection":"column","gap":"4px"},"children":[["$","span",null,{"style":{"fontSize":"11px","color":"var(--text3)"},"children":"← 上一篇"}],["$","span",null,{"children":"识别信号表 · Signal Reference"}]]}],["$","$L3",null,{"href":"/c/mental-models/pid-controller","style":{"color":"var(--text2)","textDecoration":"none","fontSize":"13px","display":"flex","flexDirection":"column","gap":"4px","textAlign":"right"},"children":[["$","span",null,{"style":{"fontSize":"11px","color":"var(--text3)"},"children":"下一篇 →"}],["$","span",null,{"children":"PID 控制器 · PID Controller"}]]}]]}]
+6:["$","aside",null,{"className":"article-toc","children":[["$","div",null,{"style":{"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--text3)","marginBottom":"12px"},"children":"本频道其他内容"}],[["$","$L3","antipatterns",{"href":"/c/mental-models/antipatterns","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"Ref"}],"反模式对照表"]}],["$","$L3","fourier-decomposition",{"href":"/c/mental-models/fourier-decomposition","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"02"}],"傅里叶分解"]}],["$","$L3","pareto-front",{"href":"/c/mental-models/pareto-front","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"07"}],"帕累托前沿"]}],["$","$L3","phase-transition",{"href":"/c/mental-models/phase-transition","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"03"}],"相变"]}],["$","$L3","pid-controller",{"href":"/c/mental-models/pid-controller","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"04"}],"PID 控制器"]}],["$","$L3","shannon-entropy",{"href":"/c/mental-models/shannon-entropy","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--accent)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":500,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"06"}],"香农熵"]}],["$","$L3","signal-table",{"href":"/c/mental-models/signal-table","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"Ref"}],"识别信号表"]}],["$","$L3","simulated-annealing",{"href":"/c/mental-models/simulated-annealing","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"01"}],"模拟退火"]}]]]}]
+7:["$","script","script-0",{"src":"/claude-code-guide/_next/static/chunks/0r~xksys6ds~4.js","async":true}]
+8:["$","$L9",null,{"children":["$","$a",null,{"name":"Next.MetadataOutlet","children":"$@b"}]}]
+b:null

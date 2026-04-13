@@ -135,24 +135,21 @@ export default async function PostPage({
               style={{ marginBottom: '48px' }}
             />
 
-            {/* Giscus comments */}
-            <div
-              style={{
-                paddingTop: '40px',
-                borderTop: '1px solid var(--border)',
-                marginBottom: '40px',
-              }}
-            >
-              <div style={{ fontSize: '13px', color: 'var(--text3)', marginBottom: '16px' }}>
-                💬 评论（由 GitHub Discussions 驱动）
+            {/* Giscus comments — only rendered when env is configured */}
+            {process.env.NEXT_PUBLIC_GISCUS_REPO && (
+              <div
+                style={{
+                  paddingTop: '40px',
+                  borderTop: '1px solid var(--border)',
+                  marginBottom: '40px',
+                }}
+              >
+                <div style={{ fontSize: '13px', color: 'var(--text3)', marginBottom: '16px' }}>
+                  💬 评论（由 GitHub Discussions 驱动）
+                </div>
+                <div id="giscus-container" />
               </div>
-              {/* Giscus script injected via component — configure repo in env */}
-              <div id="giscus-container">
-                <p style={{ fontSize: '12px', color: 'var(--text3)' }}>
-                  配置 Giscus: 在 <code>.env.local</code> 中设置 <code>NEXT_PUBLIC_GISCUS_REPO</code>
-                </p>
-              </div>
-            </div>
+            )}
 
             {/* Prev / Next */}
             <div style={{

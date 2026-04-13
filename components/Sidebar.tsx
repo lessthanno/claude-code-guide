@@ -19,7 +19,6 @@ export default function Sidebar() {
       overflowY: 'auto',
       position: 'sticky',
       top: 0,
-      display: 'flex',
       flexDirection: 'column',
       flexShrink: 0,
     }}>
@@ -44,10 +43,10 @@ export default function Sidebar() {
           color: 'var(--bg)',
           fontWeight: 700,
           flexShrink: 0,
-        }}>CC</div>
+        }}>知</div>
         <div>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)', lineHeight: 1.2 }}>Claude Code</div>
-          <div style={{ fontSize: '10px', color: 'var(--text3)', letterSpacing: '0.05em' }}>知识社群</div>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)', lineHeight: 1.2 }}>知识积累</div>
+          <div style={{ fontSize: '10px', color: 'var(--text3)', letterSpacing: '0.05em' }}>工程师社群</div>
         </div>
       </div>
 

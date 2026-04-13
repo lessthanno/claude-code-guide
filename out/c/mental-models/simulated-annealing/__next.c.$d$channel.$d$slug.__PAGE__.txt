@@ -1,0 +1,133 @@
+1:"$Sreact.fragment"
+2:I[16093,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js","/claude-code-guide/_next/static/chunks/0r~xksys6ds~4.js"],"default"]
+3:I[5232,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js","/claude-code-guide/_next/static/chunks/0r~xksys6ds~4.js"],""]
+9:I[96396,["/claude-code-guide/_next/static/chunks/07.~ra05-.7l~.js","/claude-code-guide/_next/static/chunks/0qz2o3qc~styj.js"],"OutletBoundary"]
+a:"$Sreact.suspense"
+4:T1563,
+
+<div class="concept" id="sa">
+    <div class="concept-header">
+      <div class="concept-num">01</div>
+      <div class="concept-title-block">
+        <h2>模拟退火 · Simulated Annealing</h2>
+        <div class="concept-subtitle">物理学 / 优化算法 · 用于 Prompt 调优协议</div>
+      </div>
+      <span class="domain-badge tag-phys">物理</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心公式</div>
+      <div class="formula">P(接受更差的解) = exp(−ΔE / T)
+
+ΔE = 新prompt得分 − 当前prompt得分  (负数 = 更差)
+T   = 当前温度 (从1.0降到接近0)
+
+T 高 → P 大 → 接受差解的概率高 → 大幅跳跃
+T 低 → P 小 → 几乎只接受更好的解 → 精细微调</div>
+      <div class="formula-note">关键直觉：允许"走错路"才能跳出局部最优。纯贪心 = 永远卡在第一个山顶。</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Claude Code 场景</div>
+      <div class="scenario">
+        <div class="scenario-tag">真实场景</div>
+        <p>你在调优 XerpaAI 社媒 agent 的 system prompt，当前输出质量 7.5/10，微调措辞已经一周没有提升。你陷入了局部最优。</p>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">识别信号 — 什么时候用这个模式</div>
+      <table class="decision-table">
+        <tr><th>你观察到</th><th>诊断</th><th>应对</th></tr>
+        <tr>
+          <td class="signal">微调措辞 → 无变化</td>
+          <td>局部最优</td>
+          <td class="action">进入高温阶段，换结构</td>
+        </tr>
+        <tr>
+          <td class="signal">加 example → 变好 → 再加 → 更差</td>
+          <td>过拟合到 example</td>
+          <td class="action">降温，只调 example 数量</td>
+        </tr>
+        <tr>
+          <td class="signal">换 role/persona → 质量波动很大</td>
+          <td>温度仍然高，探索空间大</td>
+          <td class="action">继续高温，记录最高分结构</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — CLAUDE.md 中的调优协议</div>
+      <div class="code-header">
+        <span>prompt_optimizer.ts</span>
+        <span>Claude Code 项目</span>
+      </div>
+<pre><span class="cm">// 模拟退火 Prompt 调优器</span>
+<span class="cm">// 在 Claude Code 中运行：cc run optimize</span>
+
+<span class="kw">interface</span> <span class="var">PromptCandidate</span> {
+  content: <span class="kw">string</span>;
+  score: <span class="kw">number</span>;
+}
+
+<span class="kw">async function</span> <span class="fn">simulatedAnnealingOptimize</span>(
+  initialPrompt: <span class="kw">string</span>,
+  evaluate: (p: <span class="kw">string</span>) => <span class="kw">Promise</span>&lt;<span class="kw">number</span>&gt;,
+  iterations = <span class="num">100</span>
+) {
+  <span class="kw">let</span> current: <span class="var">PromptCandidate</span> = {
+    content: initialPrompt,
+    score: <span class="kw">await</span> evaluate(initialPrompt)
+  };
+  <span class="kw">let</span> best = { ...current };
+  <span class="kw">let</span> T = <span class="num">1.0</span>; <span class="cm">// 初始温度</span>
+
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; iterations; i++) {
+    T *= <span class="num">0.97</span>; <span class="cm">// 降温速率</span>
+
+    <span class="cm">// 高温：大变动；低温：小变动</span>
+    <span class="kw">const</span> candidate = T > <span class="num">0.5</span>
+      ? <span class="kw">await</span> <span class="fn">mutateStructure</span>(current.content)  <span class="cm">// 换段落/结构/persona</span>
+      : <span class="kw">await</span> <span class="fn">mutatePhrasing</span>(current.content);   <span class="cm">// 只换措辞/词语</span>
+
+    <span class="kw">const</span> newScore = <span class="kw">await</span> evaluate(candidate);
+    <span class="kw">const</span> delta = newScore - current.score;
+
+    <span class="cm">// 接受条件：更好 OR 概率性接受更差的</span>
+    <span class="kw">if</span> (delta > <span class="num">0</span> || Math.<span class="fn">random</span>() &lt; Math.<span class="fn">exp</span>(delta / T)) {
+      current = { content: candidate, score: newScore };
+    }
+
+    <span class="kw">if</span> (current.score > best.score) best = { ...current };
+
+    console.<span class="fn">log</span>(<span class="str">`T=${T.toFixed(2)} score=${newScore.toFixed(1)} best=${best.score.toFixed(1)}`</span>);
+  }
+
+  <span class="kw">return</span> best;
+}</pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式</strong>
+      只看当前得分微调措辞，没有"高温阶段"。这是纯贪心，必然卡在局部最优。如果你的 prompt 调了两天得分没超过 7/10，这就是信号——需要退火，不是微调。
+    </div>
+
+    <div class="quick-ref">
+      <h4>实操记忆法</h4>
+      <ul>
+        <li>高温期（T > 0.5）：换 persona、换结构、加删整段 example，接受暂时变差</li>
+        <li>低温期（T &lt; 0.3）：只改单词、语气、标点，不接受退步</li>
+        <li>判断标准：同一类型的变动已经连续 3 次没有提升 → 升温，换变动类型</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== 02 傅里叶分解 ===== -->
+  
+0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"layout-root","children":[["$","$L2",null,{}],["$","div",null,{"className":"layout-body","children":[["$","header",null,{"className":"layout-header","style":{"gap":"8px","justifyContent":"flex-start"},"children":[["$","$L3",null,{"href":"/c/mental-models","style":{"color":"var(--text3)","textDecoration":"none","fontSize":"13px"},"children":["📐"," ","思维模型手册"]}],["$","span",null,{"style":{"color":"var(--border2)","fontSize":"13px"},"children":"/"}],["$","span",null,{"style":{"fontSize":"13px","color":"var(--text2)","overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":"模拟退火 · Simulated Annealing"}]]}],["$","div",null,{"className":"layout-row","children":[["$","main",null,{"className":"article-main","children":[["$","div",null,{"style":{"marginBottom":"40px","paddingBottom":"32px","borderBottom":"1px solid var(--border)"},"children":[["$","div",null,{"style":{"display":"flex","alignItems":"center","gap":"8px","marginBottom":"16px"},"children":[["$","span",null,{"style":{"fontSize":"10px","padding":"2px 7px","borderRadius":"4px","fontWeight":600,"color":"#8b6fb5","background":"#1a1520","letterSpacing":"0.05em","textTransform":"uppercase"},"children":"物理学"}],false,["$","span",null,{"style":{"marginLeft":"auto","fontSize":"12px","color":"var(--text3)"},"children":"12 天前"}]]}],["$","h1",null,{"style":{"fontSize":"24px","fontWeight":700,"color":"var(--text)","letterSpacing":"-0.02em","lineHeight":1.3,"marginBottom":"8px"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","fontSize":"13px","color":"var(--text3)","marginRight":"10px"},"children":"01"}],"模拟退火 · Simulated Annealing"]}],["$","div",null,{"style":{"fontSize":"14px","color":"var(--text3)","letterSpacing":"0.04em","marginTop":"4px"},"children":"物理学 / 优化算法 · 用于 Prompt 调优协议"}],["$","div",null,{"style":{"display":"flex","gap":"6px","marginTop":"14px","flexWrap":"wrap"},"children":[["$","span","prompt",{"style":{"fontSize":"11px","padding":"2px 8px","borderRadius":"20px","border":"1px solid var(--border2)","color":"var(--text3)"},"children":["#","prompt"]}],["$","span","optimization",{"style":{"fontSize":"11px","padding":"2px 8px","borderRadius":"20px","border":"1px solid var(--border2)","color":"var(--text3)"},"children":["#","optimization"]}]]}]]}],["$","div",null,{"className":"prose","dangerouslySetInnerHTML":{"__html":"$4"},"style":{"marginBottom":"48px"}}],"$undefined","$L5"]}],"$L6"]}]]}]]}],["$L7"],"$L8"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"XdoT_a2sWjwkXWHT6oVz4"}
+5:["$","div",null,{"style":{"display":"flex","justifyContent":"space-between","gap":"16px","paddingTop":"24px","borderTop":"1px solid var(--border)"},"children":[["$","$L3",null,{"href":"/c/mental-models/strange-attractor","style":{"color":"var(--text2)","textDecoration":"none","fontSize":"13px","display":"flex","flexDirection":"column","gap":"4px"},"children":[["$","span",null,{"style":{"fontSize":"11px","color":"var(--text3)"},"children":"← 上一篇"}],["$","span",null,{"children":"奇异吸引子 · Strange Attractor"}]]}],["$","$L3",null,{"href":"/c/mental-models/signal-table","style":{"color":"var(--text2)","textDecoration":"none","fontSize":"13px","display":"flex","flexDirection":"column","gap":"4px","textAlign":"right"},"children":[["$","span",null,{"style":{"fontSize":"11px","color":"var(--text3)"},"children":"下一篇 →"}],["$","span",null,{"children":"识别信号表 · Signal Reference"}]]}]]}]
+6:["$","aside",null,{"className":"article-toc","children":[["$","div",null,{"style":{"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--text3)","marginBottom":"12px"},"children":"本频道其他内容"}],[["$","$L3","antipatterns",{"href":"/c/mental-models/antipatterns","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"Ref"}],"反模式对照表"]}],["$","$L3","fourier-decomposition",{"href":"/c/mental-models/fourier-decomposition","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"02"}],"傅里叶分解"]}],["$","$L3","pareto-front",{"href":"/c/mental-models/pareto-front","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"07"}],"帕累托前沿"]}],["$","$L3","phase-transition",{"href":"/c/mental-models/phase-transition","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"03"}],"相变"]}],["$","$L3","pid-controller",{"href":"/c/mental-models/pid-controller","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"04"}],"PID 控制器"]}],["$","$L3","shannon-entropy",{"href":"/c/mental-models/shannon-entropy","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"06"}],"香农熵"]}],["$","$L3","signal-table",{"href":"/c/mental-models/signal-table","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--text3)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":400,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"Ref"}],"识别信号表"]}],["$","$L3","simulated-annealing",{"href":"/c/mental-models/simulated-annealing","style":{"display":"block","padding":"6px 0","fontSize":"12px","color":"var(--accent)","textDecoration":"none","borderBottom":"1px solid var(--border)","fontWeight":500,"overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"},"children":[["$","span",null,{"style":{"fontFamily":"var(--mono)","marginRight":"6px","fontSize":"10px"},"children":"01"}],"模拟退火"]}]]]}]
+7:["$","script","script-0",{"src":"/claude-code-guide/_next/static/chunks/0r~xksys6ds~4.js","async":true}]
+8:["$","$L9",null,{"children":["$","$a",null,{"name":"Next.MetadataOutlet","children":"$@b"}]}]
+b:null

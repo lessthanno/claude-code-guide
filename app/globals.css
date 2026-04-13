@@ -111,7 +111,7 @@ pre {
   max-width: 720px;
 }
 
-/* Right panel */
+/* Right panel — sticky so it doesn't scroll with feed */
 .layout-aside {
   width: 280px;
   min-width: 280px;
@@ -121,6 +121,16 @@ pre {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  position: sticky;
+  top: 52px;
+  align-self: flex-start;
+  max-height: calc(100vh - 52px);
+  overflow-y: auto;
+}
+
+/* Sidebar — display managed here so media query can override inline styles */
+.layout-sidebar {
+  display: flex;
 }
 
 /* Article body */

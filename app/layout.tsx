@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Claude Code 知识社群',
-  description: '用工程师视角深度理解 Claude Code — 思维模型、实战模板、每日动态',
+  title: '知识积累 · 工程师社群',
+  description: '工程实践中的思考与沉淀 — 思维模型、实战模板、AI 编程、每日动态',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
