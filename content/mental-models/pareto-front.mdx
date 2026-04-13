@@ -35,12 +35,12 @@ pro: false
       <div class="block-label">Claude Code 场景 — Agent 配置选型</div>
       <div class="scenario">
         <div class="scenario-tag">真实场景</div>
-        <p>为 XerpaAI 内容 agent 选择：模型、并发数、重试策略。速度/质量/成本三者不能同时最优，必须先明确优先级再选配置。</p>
+        <p>为 AI 内容 agent 选择：模型、并发数、重试策略。速度/质量/成本三者不能同时最优，必须先明确优先级再选配置。</p>
       </div>
       <div class="code-header">
         <span>agent-config-selector.ts</span>
       </div>
-<pre><span class="cm">// XerpaAI 三条产品线的帕累托配置</span>
+<pre><span class="cm">// 三条产品线的帕累托配置</span>
 <span class="kw">const</span> paretoConfigs = {
   <span class="cm">// FujiPay 支付确认：速度 > 质量 > 成本</span>
   <span class="str">'fujipay-confirm'</span>: {
@@ -52,7 +52,7 @@ pro: false
     tradeoff: <span class="str">'speed=10, quality=6, cost=9'</span>,
   },
   
-  <span class="cm">// XerpaAI 内容生成：质量 > 成本 > 速度</span>
+  <span class="cm">// 内容生成：质量 > 成本 > 速度</span>
   <span class="str">'xerpa-content'</span>: {
     model: <span class="str">'claude-sonnet-4-6'</span>,
     concurrency: <span class="num">3</span>,

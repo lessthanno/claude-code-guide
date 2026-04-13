@@ -39,14 +39,14 @@ pro: false
     </div>
 
     <div class="block">
-      <div class="block-label">Claude Code 场景 — XerpaAI 内容生成 Agent</div>
+      <div class="block-label">Claude Code 场景 — 内容生成 Agent</div>
       <div class="scenario">
         <div class="scenario-tag">真实场景</div>
         <p>生成"推文 + 配图 + 发布策略"。错误做法是串行；正确做法是识别三个维度是否正交，然后决定并行度。</p>
       </div>
       <div class="code-header">
         <span>agent-orchestrator.ts</span>
-        <span>XerpaForge</span>
+        <span>TaskRunner</span>
       </div>
 <pre><span class="cm">// ❌ 错误：伪装成并行的串行</span>
 <span class="kw">const</span> [text, image, timing] = <span class="kw">await</span> Promise.<span class="fn">all</span>([
