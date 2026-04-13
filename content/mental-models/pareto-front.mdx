@@ -1,0 +1,117 @@
+---
+num: "07"
+title: "帕累托前沿 · Pareto Front"
+titleEn: "Pareto Front"
+subtitle: "多目标优化 · 用于 Agent 架构决策"
+domain: math
+tags: ["agent", "architecture"]
+date: "2026-04-01"
+pro: false
+---
+
+
+<div class="concept" id="pareto">
+    <div class="concept-header">
+      <div class="concept-num">07</div>
+      <div class="concept-title-block">
+        <h2>帕累托前沿 · Pareto Front</h2>
+        <div class="concept-subtitle">多目标优化 · 用于 Agent 架构决策</div>
+      </div>
+      <span class="domain-badge tag-math">数学</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心直觉</div>
+      <div class="formula">在多目标优化中，不存在一个解在所有维度都最优
+改善任何一个维度，必然牺牲另一个 — 这是数学必然
+
+实践含义：
+1. 先明确你的约束优先级
+2. 找到帕累托前沿上对应的点
+3. 不要在"前沿内部"浪费时间（存在同时更好的解）</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Claude Code 场景 — Agent 配置选型</div>
+      <div class="scenario">
+        <div class="scenario-tag">真实场景</div>
+        <p>为 XerpaAI 内容 agent 选择：模型、并发数、重试策略。速度/质量/成本三者不能同时最优，必须先明确优先级再选配置。</p>
+      </div>
+      <div class="code-header">
+        <span>agent-config-selector.ts</span>
+      </div>
+<pre><span class="cm">// XerpaAI 三条产品线的帕累托配置</span>
+<span class="kw">const</span> paretoConfigs = {
+  <span class="cm">// FujiPay 支付确认：速度 > 质量 > 成本</span>
+  <span class="str">'fujipay-confirm'</span>: {
+    model: <span class="str">'claude-haiku-4-5'</span>,
+    concurrency: <span class="num">10</span>,
+    maxRetries: <span class="num">1</span>,          <span class="cm">// 宁可失败，不能超时</span>
+    timeoutMs: <span class="num">2000</span>,
+    streaming: <span class="kw">true</span>,
+    tradeoff: <span class="str">'speed=10, quality=6, cost=9'</span>,
+  },
+  
+  <span class="cm">// XerpaAI 内容生成：质量 > 成本 > 速度</span>
+  <span class="str">'xerpa-content'</span>: {
+    model: <span class="str">'claude-sonnet-4-6'</span>,
+    concurrency: <span class="num">3</span>,
+    maxRetries: <span class="num">3</span>,          <span class="cm">// 允许重试，追求质量</span>
+    timeoutMs: <span class="num">30000</span>,
+    streaming: <span class="kw">false</span>,
+    tradeoff: <span class="str">'speed=4, quality=9, cost=5'</span>,
+  },
+  
+  <span class="cm">// UXLINK 数据分析：成本 > 质量 > 速度</span>
+  <span class="str">'uxlink-analytics'</span>: {
+    model: <span class="str">'claude-haiku-4-5'</span>,
+    concurrency: <span class="num">1</span>,          <span class="cm">// 串行，省 token</span>
+    maxRetries: <span class="num">2</span>,
+    timeoutMs: <span class="num">60000</span>,        <span class="cm">// 允许慢</span>
+    cacheEnabled: <span class="kw">true</span>,     <span class="cm">// 激进缓存</span>
+    tradeoff: <span class="str">'speed=2, quality=7, cost=10'</span>,
+  },
+};
+
+<span class="cm">// 关键：每条业务线明确自己在哪个前沿点，不混用</span>
+<span class="kw">function</span> <span class="fn">getAgentConfig</span>(productLine: <span class="kw">string</span>) {
+  <span class="kw">const</span> config = paretoConfigs[productLine];
+  <span class="kw">if</span> (!config) <span class="kw">throw new</span> Error(
+    <span class="str">`Unknown product line: ${productLine}. Must explicitly define tradeoffs first.`</span>
+  );
+  <span class="kw">return</span> config;
+}</pre>
+    </div>
+
+    <div class="block">
+      <div class="block-label">帕累托支配检查 — 找出"绝对差"的配置</div>
+      <div class="code-header">
+        <span>pareto-check.ts</span>
+      </div>
+<pre><span class="cm">// 帕累托支配：如果 A 在所有维度都 >= B，则 B 被支配（B 是次优的）</span>
+<span class="kw">function</span> <span class="fn">isDominated</span>(
+  candidate: <span class="var">Config</span>,
+  others: <span class="var">Config</span>[],
+  objectives: (<span class="kw">keyof</span> <span class="var">Config</span>)[]
+): <span class="kw">boolean</span> {
+  <span class="kw">return</span> others.<span class="fn">some</span>(other =>
+    objectives.<span class="fn">every</span>(o => other[o] >= candidate[o]) &&
+    objectives.<span class="fn">some</span>(o => other[o] > candidate[o])
+  );
+}
+
+<span class="cm">// 使用：淘汰被支配的配置</span>
+<span class="kw">const</span> paretoFront = configs.<span class="fn">filter</span>(c =>
+  !<span class="fn">isDominated</span>(c, configs, [<span class="str">'speed'</span>, <span class="str">'quality'</span>, <span class="str">'cost'</span>])
+);
+<span class="cm">// 剩下的才值得讨论，它们才是真正的 tradeoff 选择</span></pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式</strong>
+      给同一个 agent 设置"又快又好又便宜"的目标，然后不停调参试图同时提升三个维度。这违反了帕累托定理。正确做法是先决定"什么最重要"，再接受另外两个维度的牺牲。
+    </div>
+  </div>
+
+  <!-- ===== 信号表 ===== -->
+  

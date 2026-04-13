@@ -1,0 +1,104 @@
+---
+num: "02"
+title: "傅里叶分解 · Fourier Decomposition"
+titleEn: "Fourier Decomposition"
+subtitle: "调和分析 · 用于 Multi-agent 任务拆解"
+domain: math
+tags: ["multi-agent", "task-split"]
+date: "2026-04-01"
+pro: false
+---
+
+
+<div class="concept" id="fourier">
+    <div class="concept-header">
+      <div class="concept-num">02</div>
+      <div class="concept-title-block">
+        <h2>傅里叶分解 · Fourier Decomposition</h2>
+        <div class="concept-subtitle">调和分析 · 用于 Multi-agent 任务拆解</div>
+      </div>
+      <span class="domain-badge tag-math">数学</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心直觉</div>
+      <div class="formula">任意复杂信号 = Σ 简单正弦波
+任意复杂任务 = Σ 正交子任务
+
+正交的数学定义：∫ f(x)·g(x)dx = 0
+工程含义：改变 f 的参数，不影响 g 的处理逻辑</div>
+      <div class="formula-note">关键词是"正交"。正交子任务之间没有依赖 → 可以完全并行。</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">正交测试 — 如何判断任务是否可并行</div>
+      <div class="callout callout-info">
+        <strong>正交判断题</strong>
+        修改任务 A 的输入或实现，任务 B 的逻辑需要改变吗？如果需要 → 不正交，必须串行。如果不需要 → 正交，可以并行。
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Claude Code 场景 — XerpaAI 内容生成 Agent</div>
+      <div class="scenario">
+        <div class="scenario-tag">真实场景</div>
+        <p>生成"推文 + 配图 + 发布策略"。错误做法是串行；正确做法是识别三个维度是否正交，然后决定并行度。</p>
+      </div>
+      <div class="code-header">
+        <span>agent-orchestrator.ts</span>
+        <span>XerpaForge</span>
+      </div>
+<pre><span class="cm">// ❌ 错误：伪装成并行的串行</span>
+<span class="kw">const</span> [text, image, timing] = <span class="kw">await</span> Promise.<span class="fn">all</span>([
+  <span class="fn">generateText</span>(topic),
+  <span class="fn">generateImage</span>(topic), <span class="cm">// 实际上需要 text 来做风格对齐</span>
+  <span class="fn">getBestTiming</span>(topic),  <span class="cm">// 实际上需要 text 来判断内容类型</span>
+]);
+<span class="cm">// → text/image/timing 之间有隐性依赖，并行会导致不一致</span>
+
+<span class="cm">// ✅ 正确：先做正交测试，再决定并发结构</span>
+<span class="kw">async function</span> <span class="fn">orchestrateContent</span>(topic: <span class="kw">string</span>) {
+  <span class="cm">// Step 1：识别正交维度</span>
+  <span class="cm">// 视觉风格模板 ⊥ 发布时间分析 ⊥ 历史数据提取 → 三者正交</span>
+  <span class="cm">// 文案 → 依赖 topic（但不依赖其他 agent）→ 可独立</span>
+  
+  <span class="kw">const</span> [styleTemplates, timingData, historicalPerf] = <span class="kw">await</span> Promise.<span class="fn">all</span>([
+    <span class="fn">fetchVisualStyles</span>(),         <span class="cm">// 不依赖文案</span>
+    <span class="fn">analyzeBestPostTimes</span>(),      <span class="cm">// 不依赖文案</span>
+    <span class="fn">fetchHistoricalPerformance</span>(), <span class="cm">// 不依赖文案</span>
+  ]);
+
+  <span class="cm">// Step 2：用上面的数据生成文案（现在可以做好风格对齐）</span>
+  <span class="kw">const</span> texts = <span class="kw">await</span> <span class="fn">generateTexts</span>(topic, {
+    styleHints: styleTemplates,
+    performanceSignals: historicalPerf,
+  });
+
+  <span class="cm">// Step 3：文案确定后，图+排期可以再次并行</span>
+  <span class="kw">const</span> [images, schedule] = <span class="kw">await</span> Promise.<span class="fn">all</span>([
+    <span class="fn">generateImages</span>(texts, styleTemplates),
+    <span class="fn">buildSchedule</span>(texts, timingData),
+  ]);
+
+  <span class="kw">return</span> { texts, images, schedule };
+}</pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式</strong>
+      用 Promise.all 包所有 agent 就叫"并行"。实际上 agents 之间有隐性依赖（一个 agent 的质量影响另一个），结果是并行执行、串行失败。
+    </div>
+
+    <div class="quick-ref">
+      <h4>拆解步骤</h4>
+      <ul>
+        <li>列出所有子任务，对每对画一条"依赖线"</li>
+        <li>没有依赖线的任务 → 正交 → 放入第一批并行</li>
+        <li>有单向依赖的任务 → 拓扑排序，分批执行</li>
+        <li>有双向依赖 → 这不是两个任务，而是一个任务，合并</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== 03 相变 ===== -->
+  

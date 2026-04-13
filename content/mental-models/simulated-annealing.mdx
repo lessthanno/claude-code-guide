@@ -1,0 +1,132 @@
+---
+num: "01"
+title: "模拟退火 · Simulated Annealing"
+titleEn: "Simulated Annealing"
+subtitle: "物理学 / 优化算法 · 用于 Prompt 调优协议"
+domain: physics
+tags: ["prompt", "optimization"]
+date: "2026-04-01"
+pro: false
+---
+
+
+<div class="concept" id="sa">
+    <div class="concept-header">
+      <div class="concept-num">01</div>
+      <div class="concept-title-block">
+        <h2>模拟退火 · Simulated Annealing</h2>
+        <div class="concept-subtitle">物理学 / 优化算法 · 用于 Prompt 调优协议</div>
+      </div>
+      <span class="domain-badge tag-phys">物理</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心公式</div>
+      <div class="formula">P(接受更差的解) = exp(−ΔE / T)
+
+ΔE = 新prompt得分 − 当前prompt得分  (负数 = 更差)
+T   = 当前温度 (从1.0降到接近0)
+
+T 高 → P 大 → 接受差解的概率高 → 大幅跳跃
+T 低 → P 小 → 几乎只接受更好的解 → 精细微调</div>
+      <div class="formula-note">关键直觉：允许"走错路"才能跳出局部最优。纯贪心 = 永远卡在第一个山顶。</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Claude Code 场景</div>
+      <div class="scenario">
+        <div class="scenario-tag">真实场景</div>
+        <p>你在调优 XerpaAI 社媒 agent 的 system prompt，当前输出质量 7.5/10，微调措辞已经一周没有提升。你陷入了局部最优。</p>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">识别信号 — 什么时候用这个模式</div>
+      <table class="decision-table">
+        <tr><th>你观察到</th><th>诊断</th><th>应对</th></tr>
+        <tr>
+          <td class="signal">微调措辞 → 无变化</td>
+          <td>局部最优</td>
+          <td class="action">进入高温阶段，换结构</td>
+        </tr>
+        <tr>
+          <td class="signal">加 example → 变好 → 再加 → 更差</td>
+          <td>过拟合到 example</td>
+          <td class="action">降温，只调 example 数量</td>
+        </tr>
+        <tr>
+          <td class="signal">换 role/persona → 质量波动很大</td>
+          <td>温度仍然高，探索空间大</td>
+          <td class="action">继续高温，记录最高分结构</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — CLAUDE.md 中的调优协议</div>
+      <div class="code-header">
+        <span>prompt_optimizer.ts</span>
+        <span>Claude Code 项目</span>
+      </div>
+<pre><span class="cm">// 模拟退火 Prompt 调优器</span>
+<span class="cm">// 在 Claude Code 中运行：cc run optimize</span>
+
+<span class="kw">interface</span> <span class="var">PromptCandidate</span> {
+  content: <span class="kw">string</span>;
+  score: <span class="kw">number</span>;
+}
+
+<span class="kw">async function</span> <span class="fn">simulatedAnnealingOptimize</span>(
+  initialPrompt: <span class="kw">string</span>,
+  evaluate: (p: <span class="kw">string</span>) => <span class="kw">Promise</span>&lt;<span class="kw">number</span>&gt;,
+  iterations = <span class="num">100</span>
+) {
+  <span class="kw">let</span> current: <span class="var">PromptCandidate</span> = {
+    content: initialPrompt,
+    score: <span class="kw">await</span> evaluate(initialPrompt)
+  };
+  <span class="kw">let</span> best = { ...current };
+  <span class="kw">let</span> T = <span class="num">1.0</span>; <span class="cm">// 初始温度</span>
+
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; iterations; i++) {
+    T *= <span class="num">0.97</span>; <span class="cm">// 降温速率</span>
+
+    <span class="cm">// 高温：大变动；低温：小变动</span>
+    <span class="kw">const</span> candidate = T > <span class="num">0.5</span>
+      ? <span class="kw">await</span> <span class="fn">mutateStructure</span>(current.content)  <span class="cm">// 换段落/结构/persona</span>
+      : <span class="kw">await</span> <span class="fn">mutatePhrasing</span>(current.content);   <span class="cm">// 只换措辞/词语</span>
+
+    <span class="kw">const</span> newScore = <span class="kw">await</span> evaluate(candidate);
+    <span class="kw">const</span> delta = newScore - current.score;
+
+    <span class="cm">// 接受条件：更好 OR 概率性接受更差的</span>
+    <span class="kw">if</span> (delta > <span class="num">0</span> || Math.<span class="fn">random</span>() &lt; Math.<span class="fn">exp</span>(delta / T)) {
+      current = { content: candidate, score: newScore };
+    }
+
+    <span class="kw">if</span> (current.score > best.score) best = { ...current };
+
+    console.<span class="fn">log</span>(<span class="str">`T=${T.toFixed(2)} score=${newScore.toFixed(1)} best=${best.score.toFixed(1)}`</span>);
+  }
+
+  <span class="kw">return</span> best;
+}</pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式</strong>
+      只看当前得分微调措辞，没有"高温阶段"。这是纯贪心，必然卡在局部最优。如果你的 prompt 调了两天得分没超过 7/10，这就是信号——需要退火，不是微调。
+    </div>
+
+    <div class="quick-ref">
+      <h4>实操记忆法</h4>
+      <ul>
+        <li>高温期（T > 0.5）：换 persona、换结构、加删整段 example，接受暂时变差</li>
+        <li>低温期（T &lt; 0.3）：只改单词、语气、标点，不接受退步</li>
+        <li>判断标准：同一类型的变动已经连续 3 次没有提升 → 升温，换变动类型</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== 02 傅里叶分解 ===== -->
+  

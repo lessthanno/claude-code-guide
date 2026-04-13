@@ -1,0 +1,62 @@
+---
+num: "Ref"
+title: "反模式对照表 · Anti-Patterns"
+titleEn: "Anti-Patterns"
+subtitle: "常见错误模式对照"
+domain: control
+tags: ["reference", "antipatterns"]
+date: "2026-04-01"
+pro: false
+---
+
+
+<div class="concept" id="antipatterns">
+    <div class="concept-header">
+      <div class="concept-num">Ref</div>
+      <div class="concept-title-block">
+        <h2>反模式对照表</h2>
+        <div class="concept-subtitle">常见错误 vs 正确思路</div>
+      </div>
+    </div>
+
+    <table class="decision-table">
+      <tr><th>常见错误思路</th><th>背后的误区</th><th>正确模式</th></tr>
+      <tr>
+        <td>"再加几条规则 prompt 就会好"</td>
+        <td>忽视相变临界点</td>
+        <td class="action">测临界点，超过后拆 sub-agent</td>
+      </tr>
+      <tr>
+        <td>"这次输出好，把它硬编码成模板"</td>
+        <td>混淆单次输出与吸引域</td>
+        <td class="action">设计边界，不复现单次</td>
+      </tr>
+      <tr>
+        <td>"Promise.all 包起来就是并行"</td>
+        <td>没做正交检查</td>
+        <td class="action">先画依赖图，再决定并发结构</td>
+      </tr>
+      <tr>
+        <td>"每次输出差了就改措辞"</td>
+        <td>只看 P 项，忽视 I 和 D</td>
+        <td class="action">区分本次误差/历史积累/趋势</td>
+      </tr>
+      <tr>
+        <td>"输出不稳定，降低 temperature"</td>
+        <td>把熵问题当温度问题</td>
+        <td class="action">先诊断 prompt 是否有歧义</td>
+      </tr>
+      <tr>
+        <td>"我们要最快最好最省钱的方案"</td>
+        <td>无视帕累托约束</td>
+        <td class="action">先定优先级，再找前沿上的点</td>
+      </tr>
+      <tr>
+        <td>"调了两天，这个 prompt 已经最优了"</td>
+        <td>局部最优，没有退火</td>
+        <td class="action">换结构探索，接受暂时退步</td>
+      </tr>
+    </table>
+  </div>
+
+

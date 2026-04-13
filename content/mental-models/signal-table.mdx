@@ -1,0 +1,63 @@
+---
+num: "Ref"
+title: "识别信号表 · Signal Reference"
+titleEn: "Signal Reference"
+subtitle: "什么问题用什么模式 · 快速查阅"
+domain: info
+tags: ["reference"]
+date: "2026-04-01"
+pro: false
+---
+
+
+<div class="concept" id="signals">
+    <div class="concept-header">
+      <div class="concept-num">Ref</div>
+      <div class="concept-title-block">
+        <h2>识别信号 — 什么问题用什么模式</h2>
+        <div class="concept-subtitle">快速查阅表</div>
+      </div>
+    </div>
+
+    <table class="decision-table">
+      <tr><th>你遇到的问题</th><th>对应模式</th><th>关键动作</th></tr>
+      <tr>
+        <td>Prompt 调了很久，质量卡在某个分数上不去</td>
+        <td class="signal">模拟退火</td>
+        <td class="action">升温，换结构，接受暂时退步</td>
+      </tr>
+      <tr>
+        <td>Multi-agent 并行了，但结果不一致/互相冲突</td>
+        <td class="signal">傅里叶分解</td>
+        <td class="action">做正交测试，找隐性依赖</td>
+      </tr>
+      <tr>
+        <td>多加了一些东西（agent/context/rules），系统突然变差</td>
+        <td class="signal">相变</td>
+        <td class="action">你越过临界点了，退回找相变点</td>
+      </tr>
+      <tr>
+        <td>Agent 质量时好时坏，不知道如何系统性改善</td>
+        <td class="signal">PID 控制</td>
+        <td class="action">区分 P/I/D，对症下药</td>
+      </tr>
+      <tr>
+        <td>System prompt 很长但模型经常"跑偏"</td>
+        <td class="signal">奇异吸引子</td>
+        <td class="action">改成"绝对不做什么"的边界设计</td>
+      </tr>
+      <tr>
+        <td>同一个 prompt 跑出来差异很大，不稳定</td>
+        <td class="signal">香农熵</td>
+        <td class="action">高熵 = prompt 有歧义，加约束/examples</td>
+      </tr>
+      <tr>
+        <td>团队讨论 agent 配置，争论"又快又好又便宜"</td>
+        <td class="signal">帕累托前沿</td>
+        <td class="action">先定优先级，不存在全部最优</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ===== 反模式 ===== -->
+  

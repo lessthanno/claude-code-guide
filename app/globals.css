@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0d0d0d;
+  --bg2: #141414;
+  --bg3: #1a1a1a;
+  --bg4: #222;
+  --border: #2a2a2a;
+  --border2: #333;
+  --text: #e8e6e0;
+  --text2: #a09e98;
+  --text3: #666;
+  --accent: #c8b89a;
+  --accent2: #8b7355;
+  --green: #4a9a6f;
+  --green-bg: #0d1f15;
+  --red: #a04040;
+  --red-bg: #1f0d0d;
+  --blue: #4a7ab5;
+  --blue-bg: #0d1525;
+  --amber: #a07a30;
+  --amber-bg: #1f180d;
+  --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --sans: 'Inter', system-ui, sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --font-sans: var(--sans);
+  --font-mono: var(--mono);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* Formula blocks */
+.formula {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 18px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
+  line-height: 1.8;
+  margin-bottom: 8px;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* Code blocks */
+pre {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 18px 20px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #c8c0b4;
+}
+
+/* Prose in MDX */
+.prose h2 { color: var(--text); font-size: 19px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
+.prose h3 { color: var(--text); font-size: 15px; font-weight: 600; margin: 20px 0 8px; }
+.prose p { color: var(--text2); font-size: 13.5px; line-height: 1.75; margin-bottom: 12px; }
+.prose ul { color: var(--text2); font-size: 13.5px; line-height: 1.75; padding-left: 20px; }
+.prose li { margin-bottom: 4px; }
+.prose code {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: var(--accent);
+}
