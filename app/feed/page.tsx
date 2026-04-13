@@ -1,6 +1,7 @@
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
 import { getAllPosts, CHANNEL_META, Channel } from '@/lib/content'
+import { u } from '@/lib/url'
 
 const CHANNELS = ['daily', 'mental-models', 'templates', 'community'] as Channel[]
 
@@ -30,7 +31,7 @@ export default function FeedPage() {
             <span style={{ fontSize: '16px' }}>⚡</span>
             <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)' }}>动态 Feed</span>
           </div>
-          <a href="/pro" style={{
+          <a href={u('/pro')} style={{
             fontSize: '12px',
             padding: '5px 14px',
             borderRadius: '5px',
@@ -52,12 +53,12 @@ export default function FeedPage() {
               borderBottom: '1px solid var(--border)',
               overflowX: 'auto',
             }}>
-              <FilterTab label="全部" href="/feed" active />
+              <FilterTab label="全部" href={u('/feed')} active />
               {CHANNELS.map(ch => (
                 <FilterTab
                   key={ch}
                   label={`${CHANNEL_META[ch].emoji} ${CHANNEL_META[ch].label}`}
-                  href={`/c/${ch}`}
+                  href={u(`/c/${ch}`)}
                   active={false}
                 />
               ))}
@@ -96,7 +97,7 @@ export default function FeedPage() {
               <p style={{ fontSize: '12px', color: 'var(--text2)', lineHeight: 1.65, marginBottom: '14px' }}>
                 30+ 实战模板、Multi-agent 架构图纸、每月深度文章、Discord 直接问我。
               </p>
-              <a href="/pro" style={{
+              <a href={u('/pro')} style={{
                 display: 'block',
                 textAlign: 'center',
                 background: 'var(--accent)',
@@ -117,7 +118,7 @@ export default function FeedPage() {
               {CHANNELS.map(ch => {
                 const meta = CHANNEL_META[ch]
                 return (
-                  <a key={ch} href={`/c/${ch}`} style={{
+                  <a key={ch} href={u(`/c/${ch}`)} style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
