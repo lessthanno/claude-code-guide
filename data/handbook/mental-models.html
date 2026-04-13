@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Mental Models — 参考手册</title>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --bg2: #141414;
+    --bg3: #1a1a1a;
+    --bg4: #222;
+    --border: #2a2a2a;
+    --border2: #333;
+    --text: #e8e6e0;
+    --text2: #a09e98;
+    --text3: #666;
+    --accent: #c8b89a;
+    --accent2: #8b7355;
+    --green: #4a9a6f;
+    --green-bg: #0d1f15;
+    --red: #a04040;
+    --red-bg: #1f0d0d;
+    --blue: #4a7ab5;
+    --blue-bg: #0d1525;
+    --amber: #a07a30;
+    --amber-bg: #1f180d;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { padding-top: 52px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* Sidebar */
+  nav {
+    width: 220px;
+    min-width: 220px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    position: sticky;
+    top: 52px;
+    height: calc(100vh - 52px);
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .nav-title {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 0 20px 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  nav a {
+    display: block;
+    padding: 7px 20px;
+    color: var(--text2);
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+  nav a:hover { color: var(--text); background: var(--bg3); }
+  nav a.active { color: var(--accent); border-left-color: var(--accent); background: var(--bg3); }
+  .nav-section {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 16px 20px 4px;
+  }
+  .nav-tag {
+    display: inline-block;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 6px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    vertical-align: middle;
+  }
+  .tag-phys { background: #1a1520; color: #8b6fb5; }
+  .tag-math { background: #0d1f15; color: #4a9a6f; }
+  .tag-ctrl { background: #0d1525; color: #4a7ab5; }
+  .tag-info { background: #1f180d; color: #a07a30; }
+
+  /* Main */
+  main {
+    flex: 1;
+    max-width: 860px;
+    padding: 48px 56px;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  .page-header {
+    margin-bottom: 56px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .page-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+  .page-header p {
+    color: var(--text2);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .meta-pills {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .pill {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    letter-spacing: 0.03em;
+  }
+
+  /* Concept sections */
+  .concept {
+    margin-bottom: 72px;
+    padding-bottom: 64px;
+    border-bottom: 1px solid var(--border);
+  }
+  .concept:last-child { border-bottom: none; }
+  
+  .concept-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .concept-num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text3);
+    padding-top: 5px;
+    min-width: 24px;
+  }
+  .concept-title-block h2 {
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .concept-subtitle {
+    font-size: 12px;
+    color: var(--text3);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .domain-badge {
+    margin-left: auto;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Content blocks */
+  .block { margin-bottom: 24px; }
+  .block-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .block-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .block p {
+    color: var(--text2);
+    font-size: 13.5px;
+    line-height: 1.75;
+  }
+
+  /* Formula */
+  .formula {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    line-height: 1.8;
+    margin-bottom: 8px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .formula-note {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 4px;
+    padding-left: 4px;
+  }
+
+  /* Code */
+  pre {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #c8c0b4;
+  }
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    padding: 8px 14px;
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+  }
+  .code-header + pre {
+    border-radius: 0 0 6px 6px;
+    margin-top: 0;
+  }
+  .kw { color: #8b6fb5; }
+  .fn { color: #4a9a6f; }
+  .str { color: #a07a30; }
+  .cm { color: #555; font-style: italic; }
+  .num { color: #4a7ab5; }
+  .var { color: #c8b89a; }
+
+  /* Scenario box */
+  .scenario {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 6px 6px 0;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+  .scenario-tag {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent2);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .scenario p {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.7;
+  }
+
+  /* Warning / tips */
+  .callout {
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .callout-warn {
+    background: var(--red-bg);
+    border: 1px solid #3a1515;
+    color: #c87070;
+  }
+  .callout-tip {
+    background: var(--green-bg);
+    border: 1px solid #1a3a25;
+    color: #70b890;
+  }
+  .callout-info {
+    background: var(--blue-bg);
+    border: 1px solid #152040;
+    color: #7090c8;
+  }
+  .callout strong {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    opacity: 0.8;
+  }
+
+  /* Decision table */
+  .decision-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 12px 0;
+  }
+  .decision-table th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+  .decision-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+    vertical-align: top;
+  }
+  .decision-table tr:last-child td { border-bottom: none; }
+  .decision-table .signal { color: var(--accent); font-family: var(--mono); font-size: 12px; }
+  .decision-table .action { color: var(--green); }
+
+  /* Quick ref */
+  .quick-ref {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 16px 0;
+  }
+  .quick-ref h4 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    margin-bottom: 12px;
+  }
+  .quick-ref ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .quick-ref li {
+    font-size: 13px;
+    color: var(--text2);
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .quick-ref li::before {
+    content: '→';
+    color: var(--text3);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* TOC in header */
+  .toc {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 24px;
+  }
+  .toc-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    text-decoration: none;
+    transition: border-color 0.15s;
+  }
+  .toc-item:hover { border-color: var(--border2); }
+  .toc-num { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+  .toc-name { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .toc-domain { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  hr.divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+  
+  code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--accent);
+  }
+
+  @media (max-width: 800px) {
+    nav { display: none; }
+    main { padding: 24px 20px; }
+    .toc { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<!-- Top bar -->
+<div style="position:sticky;top:0;z-index:100;height:48px;background:#0d0d0d;border-bottom:1px solid #2a2a2a;display:flex;align-items:center;padding:0 24px;gap:0;font-family:'Inter',system-ui,sans-serif;">
+  <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;margin-right:20px;">
+    <div style="width:24px;height:24px;background:#c8b89a;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0d0d0d;flex-shrink:0;">知</div>
+    <span style="font-size:13px;color:#e8e6e0;font-weight:500;">参考手册</span>
+  </a>
+  <span style="color:#2a2a2a;font-size:16px;margin-right:20px;">·</span>
+  <span style="font-size:12px;color:#666;">Claude Code 开发心智模型手册</span>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
+    <a href="/" style="font-size:12px;color:#666;text-decoration:none;">← 返回社群</a>
+    <a href="/pro" style="font-size:11px;padding:3px 10px;border-radius:4px;background:#c8b89a;color:#0d0d0d;text-decoration:none;font-weight:600;">⭐ Pro</a>
+  </div>
+</div>
+
+<nav>
+  <!-- 手册库 -->
+  <div class="nav-title" style="display:flex;align-items:center;justify-content:space-between;">
+    <span>手册库</span>
+    <span style="font-size:9px;color:#444;font-weight:400;letter-spacing:0.05em;">Vol.1 / ∞</span>
+  </div>
+
+  <!-- 当前手册 —— 突出展示 -->
+  <div style="margin:8px 12px 4px;background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:10px 12px;">
+    <div style="font-size:9px;color:#c8b89a;letter-spacing:0.1em;text-transform:uppercase;font-weight:600;margin-bottom:4px;">当前手册</div>
+    <div style="font-size:12px;color:#e8e6e0;font-weight:500;line-height:1.4;">Claude Code<br>开发心智模型</div>
+    <div style="font-size:10px;color:#666;margin-top:4px;">7 个核心概念 · 物理/数学/控制论</div>
+  </div>
+
+  <!-- 未来手册占位 -->
+  <div style="margin:4px 12px 16px;background:#111;border:1px dashed #222;border-radius:6px;padding:10px 12px;">
+    <div style="font-size:9px;color:#444;letter-spacing:0.1em;text-transform:uppercase;font-weight:600;margin-bottom:4px;">即将上线</div>
+    <div style="font-size:11px;color:#444;line-height:1.6;">Claude Code 实战模板库<br>Multi-agent 架构手册</div>
+  </div>
+
+  <!-- 本册章节 -->
+  <div class="nav-section">本册目录</div>
+  <a href="#sa" class="active">01 · 模拟退火 <span class="nav-tag tag-phys">物理</span></a>
+  <a href="#fourier">02 · 傅里叶分解 <span class="nav-tag tag-math">数学</span></a>
+  <a href="#phase">03 · 相变 <span class="nav-tag tag-phys">物理</span></a>
+  <a href="#pid">04 · PID 控制器 <span class="nav-tag tag-ctrl">控制</span></a>
+  <a href="#attractor">05 · 奇异吸引子 <span class="nav-tag tag-phys">物理</span></a>
+  <a href="#entropy">06 · 香农熵 <span class="nav-tag tag-info">信息</span></a>
+  <a href="#pareto">07 · 帕累托前沿 <span class="nav-tag tag-math">数学</span></a>
+  <div class="nav-section">快速查找</div>
+  <a href="#signals">识别信号表</a>
+  <a href="#antipatterns">反模式对照</a>
+</nav>
+
+<main>
+  <div class="page-header">
+    <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#666;font-weight:600;margin-bottom:12px;">Vol.01 · 参考手册</div>
+    <h1>Claude Code 开发心智模型手册</h1>
+    <p>7 个来自物理/数学/控制论的核心概念，映射到 Claude Code 真实开发场景。<br>每个概念包含：核心公式 → 识别信号 → 代码模式 → 错误用法。</p>
+    <div class="meta-pills">
+      <span class="pill">Claude Code</span>
+      <span class="pill">Prompt Engineering</span>
+      <span class="pill">Agent Architecture</span>
+      <span class="pill">Multi-agent Systems</span>
+    </div>
+    <div class="toc">
+      <a href="#sa" class="toc-item"><div class="toc-num">01</div><div class="toc-name">模拟退火</div><div class="toc-domain">Prompt 调优</div></a>
+      <a href="#fourier" class="toc-item"><div class="toc-num">02</div><div class="toc-name">傅里叶分解</div><div class="toc-domain">任务拆解</div></a>
+      <a href="#phase" class="toc-item"><div class="toc-num">03</div><div class="toc-name">相变</div><div class="toc-domain">系统临界点</div></a>
+      <a href="#pid" class="toc-item"><div class="toc-num">04</div><div class="toc-name">PID 控制器</div><div class="toc-domain">Agent 反馈</div></a>
+      <a href="#attractor" class="toc-item"><div class="toc-num">05</div><div class="toc-name">奇异吸引子</div><div class="toc-domain">System Prompt 设计</div></a>
+      <a href="#entropy" class="toc-item"><div class="toc-num">06</div><div class="toc-name">香农熵</div><div class="toc-domain">Prompt 诊断</div></a>
+      <a href="#pareto" class="toc-item"><div class="toc-num">07</div><div class="toc-name">帕累托前沿</div><div class="toc-domain">架构决策</div></a>
+    </div>
+  </div>
+
+  <!-- ===== 01 模拟退火 ===== -->
+  <div class="concept" id="sa">
+    <div class="concept-header">
+      <div class="concept-num">01</div>
+      <div class="concept-title-block">
+        <h2>模拟退火 · Simulated Annealing</h2>
+        <div class="concept-subtitle">物理学 / 优化算法 · 用于 Prompt 调优协议</div>
+      </div>
+      <span class="domain-badge tag-phys">物理</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心公式</div>
+      <div class="formula">P(接受更差的解) = exp(−ΔE / T)
+
+ΔE = 新prompt得分 − 当前prompt得分  (负数 = 更差)
+T   = 当前温度 (从1.0降到接近0)
+
+T 高 → P 大 → 接受差解的概率高 → 大幅跳跃
+T 低 → P 小 → 几乎只接受更好的解 → 精细微调</div>
+      <div class="formula-note">关键直觉：允许"走错路"才能跳出局部最优。纯贪心 = 永远卡在第一个山顶。</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Claude Code 场景</div>
+      <div class="scenario">
+        <div class="scenario-tag">真实场景</div>
+        <p>你在调优 社媒内容 agent 的 system prompt，当前输出质量 7.5/10，微调措辞已经一周没有提升。你陷入了局部最优。</p>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">识别信号 — 什么时候用这个模式</div>
+      <table class="decision-table">
+        <tr><th>你观察到</th><th>诊断</th><th>应对</th></tr>
+        <tr>
+          <td class="signal">微调措辞 → 无变化</td>
+          <td>局部最优</td>
+          <td class="action">进入高温阶段，换结构</td>
+        </tr>
+        <tr>
+          <td class="signal">加 example → 变好 → 再加 → 更差</td>
+          <td>过拟合到 example</td>
+          <td class="action">降温，只调 example 数量</td>
+        </tr>
+        <tr>
+          <td class="signal">换 role/persona → 质量波动很大</td>
+          <td>温度仍然高，探索空间大</td>
+          <td class="action">继续高温，记录最高分结构</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — CLAUDE.md 中的调优协议</div>
+      <div class="code-header">
+        <span>prompt_optimizer.ts</span>
+        <span>Claude Code 项目</span>
+      </div>
+<pre><span class="cm">// 模拟退火 Prompt 调优器</span>
+<span class="cm">// 在 Claude Code 中运行：cc run optimize</span>
+
+<span class="kw">interface</span> <span class="var">PromptCandidate</span> {
+  content: <span class="kw">string</span>;
+  score: <span class="kw">number</span>;
+}
+
+<span class="kw">async function</span> <span class="fn">simulatedAnnealingOptimize</span>(
+  initialPrompt: <span class="kw">string</span>,
+  evaluate: (p: <span class="kw">string</span>) => <span class="kw">Promise</span>&lt;<span class="kw">number</span>&gt;,
+  iterations = <span class="num">100</span>
+) {
+  <span class="kw">let</span> current: <span class="var">PromptCandidate</span> = {
+    content: initialPrompt,
+    score: <span class="kw">await</span> evaluate(initialPrompt)
+  };
+  <span class="kw">let</span> best = { ...current };
+  <span class="kw">let</span> T = <span class="num">1.0</span>; <span class="cm">// 初始温度</span>
+
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; iterations; i++) {
+    T *= <span class="num">0.97</span>; <span class="cm">// 降温速率</span>
+
+    <span class="cm">// 高温：大变动；低温：小变动</span>
+    <span class="kw">const</span> candidate = T > <span class="num">0.5</span>
+      ? <span class="kw">await</span> <span class="fn">mutateStructure</span>(current.content)  <span class="cm">// 换段落/结构/persona</span>
+      : <span class="kw">await</span> <span class="fn">mutatePhrasing</span>(current.content);   <span class="cm">// 只换措辞/词语</span>
+
+    <span class="kw">const</span> newScore = <span class="kw">await</span> evaluate(candidate);
+    <span class="kw">const</span> delta = newScore - current.score;
+
+    <span class="cm">// 接受条件：更好 OR 概率性接受更差的</span>
+    <span class="kw">if</span> (delta > <span class="num">0</span> || Math.<span class="fn">random</span>() &lt; Math.<span class="fn">exp</span>(delta / T)) {
+      current = { content: candidate, score: newScore };
+    }
+
+    <span class="kw">if</span> (current.score > best.score) best = { ...current };
+
+    console.<span class="fn">log</span>(<span class="str">`T=${T.toFixed(2)} score=${newScore.toFixed(1)} best=${best.score.toFixed(1)}`</span>);
+  }
+
+  <span class="kw">return</span> best;
+}</pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式</strong>
+      只看当前得分微调措辞，没有"高温阶段"。这是纯贪心，必然卡在局部最优。如果你的 prompt 调了两天得分没超过 7/10，这就是信号——需要退火，不是微调。
+    </div>
+
+    <div class="quick-ref">
+      <h4>实操记忆法</h4>
+      <ul>
+        <li>高温期（T > 0.5）：换 persona、换结构、加删整段 example，接受暂时变差</li>
+        <li>低温期（T &lt; 0.3）：只改单词、语气、标点，不接受退步</li>
+        <li>判断标准：同一类型的变动已经连续 3 次没有提升 → 升温，换变动类型</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== 02 傅里叶分解 ===== -->
+  <div class="concept" id="fourier">
+    <div class="concept-header">
+      <div class="concept-num">02</div>
+      <div class="concept-title-block">
+        <h2>傅里叶分解 · Fourier Decomposition</h2>
+        <div class="concept-subtitle">调和分析 · 用于 Multi-agent 任务拆解</div>
+      </div>
+      <span class="domain-badge tag-math">数学</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心直觉</div>
+      <div class="formula">任意复杂信号 = Σ 简单正弦波
+任意复杂任务 = Σ 正交子任务
+
+正交的数学定义：∫ f(x)·g(x)dx = 0
+工程含义：改变 f 的参数，不影响 g 的处理逻辑</div>
+      <div class="formula-note">关键词是"正交"。正交子任务之间没有依赖 → 可以完全并行。</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">正交测试 — 如何判断任务是否可并行</div>
+      <div class="callout callout-info">
+        <strong>正交判断题</strong>
+        修改任务 A 的输入或实现，任务 B 的逻辑需要改变吗？如果需要 → 不正交，必须串行。如果不需要 → 正交，可以并行。
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Claude Code 场景 — 内容生成 Agent</div>
+      <div class="scenario">
+        <div class="scenario-tag">真实场景</div>
+        <p>生成"推文 + 配图 + 发布策略"。错误做法是串行；正确做法是识别三个维度是否正交，然后决定并行度。</p>
+      </div>
+      <div class="code-header">
+        <span>agent-orchestrator.ts</span>
+        <span>TaskRunner</span>
+      </div>
+<pre><span class="cm">// ❌ 错误：伪装成并行的串行</span>
+<span class="kw">const</span> [text, image, timing] = <span class="kw">await</span> Promise.<span class="fn">all</span>([
+  <span class="fn">generateText</span>(topic),
+  <span class="fn">generateImage</span>(topic), <span class="cm">// 实际上需要 text 来做风格对齐</span>
+  <span class="fn">getBestTiming</span>(topic),  <span class="cm">// 实际上需要 text 来判断内容类型</span>
+]);
+<span class="cm">// → text/image/timing 之间有隐性依赖，并行会导致不一致</span>
+
+<span class="cm">// ✅ 正确：先做正交测试，再决定并发结构</span>
+<span class="kw">async function</span> <span class="fn">orchestrateContent</span>(topic: <span class="kw">string</span>) {
+  <span class="cm">// Step 1：识别正交维度</span>
+  <span class="cm">// 视觉风格模板 ⊥ 发布时间分析 ⊥ 历史数据提取 → 三者正交</span>
+  <span class="cm">// 文案 → 依赖 topic（但不依赖其他 agent）→ 可独立</span>
+  
+  <span class="kw">const</span> [styleTemplates, timingData, historicalPerf] = <span class="kw">await</span> Promise.<span class="fn">all</span>([
+    <span class="fn">fetchVisualStyles</span>(),         <span class="cm">// 不依赖文案</span>
+    <span class="fn">analyzeBestPostTimes</span>(),      <span class="cm">// 不依赖文案</span>
+    <span class="fn">fetchHistoricalPerformance</span>(), <span class="cm">// 不依赖文案</span>
+  ]);
+
+  <span class="cm">// Step 2：用上面的数据生成文案（现在可以做好风格对齐）</span>
+  <span class="kw">const</span> texts = <span class="kw">await</span> <span class="fn">generateTexts</span>(topic, {
+    styleHints: styleTemplates,
+    performanceSignals: historicalPerf,
+  });
+
+  <span class="cm">// Step 3：文案确定后，图+排期可以再次并行</span>
+  <span class="kw">const</span> [images, schedule] = <span class="kw">await</span> Promise.<span class="fn">all</span>([
+    <span class="fn">generateImages</span>(texts, styleTemplates),
+    <span class="fn">buildSchedule</span>(texts, timingData),
+  ]);
+
+  <span class="kw">return</span> { texts, images, schedule };
+}</pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式</strong>
+      用 Promise.all 包所有 agent 就叫"并行"。实际上 agents 之间有隐性依赖（一个 agent 的质量影响另一个），结果是并行执行、串行失败。
+    </div>
+
+    <div class="quick-ref">
+      <h4>拆解步骤</h4>
+      <ul>
+        <li>列出所有子任务，对每对画一条"依赖线"</li>
+        <li>没有依赖线的任务 → 正交 → 放入第一批并行</li>
+        <li>有单向依赖的任务 → 拓扑排序，分批执行</li>
+        <li>有双向依赖 → 这不是两个任务，而是一个任务，合并</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== 03 相变 ===== -->
+  <div class="concept" id="phase">
+    <div class="concept-header">
+      <div class="concept-num">03</div>
+      <div class="concept-title-block">
+        <h2>相变 · Phase Transition</h2>
+        <div class="concept-subtitle">统计物理 · 用于发现系统临界点</div>
+      </div>
+      <span class="domain-badge tag-phys">物理</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心直觉</div>
+      <div class="formula">水在 99°C → 100°C 发生质变，不是量变
+Agent 系统在某个临界点发生质变，不是线性退化
+
+关键：找到你系统的相变点，在它之前设置硬限制
+永远不要做线性外推（"再多加一点应该没问题"）</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Claude Code 中的三类相变点</div>
+      <table class="decision-table">
+        <tr><th>变量</th><th>相变表现</th><th>典型临界点</th><th>处理方式</th></tr>
+        <tr>
+          <td>Context 长度</td>
+          <td>质量从 8/10 突然跌到 3/10</td>
+          <td class="signal">~60-80% 窗口上限</td>
+          <td class="action">硬截断 + 摘要压缩</td>
+        </tr>
+        <tr>
+          <td>Prompt 复杂度</td>
+          <td>模型开始幻觉、跳过指令</td>
+          <td class="signal">约 15+ 条规则</td>
+          <td class="action">分层 prompt + 子 agent</td>
+        </tr>
+        <tr>
+          <td>并发 Agent 数量</td>
+          <td>协调延迟 > 并行收益</td>
+          <td class="signal">通信复杂度 O(n²) 拐点</td>
+          <td class="action">分组 + 层级编排</td>
+        </tr>
+        <tr>
+          <td>Retry 次数</td>
+          <td>质量不再提升，开始循环</td>
+          <td class="signal">3-5 次</td>
+          <td class="action">切换策略，不增加次数</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — 主动探测相变点</div>
+      <div class="code-header">
+        <span>phase-detector.ts</span>
+        <span>压力测试工具</span>
+      </div>
+<pre><span class="cm">// 主动探测 Context 相变点</span>
+<span class="kw">async function</span> <span class="fn">findPhaseTransition</span>(
+  basePrompt: <span class="kw">string</span>,
+  targetTask: <span class="kw">string</span>,
+) {
+  <span class="kw">const</span> results: { tokens: <span class="kw">number</span>; quality: <span class="kw">number</span> }[] = [];
+  <span class="kw">const</span> tokenLevels = [<span class="num">1000</span>, <span class="num">2000</span>, <span class="num">4000</span>, <span class="num">8000</span>, <span class="num">16000</span>, <span class="num">32000</span>];
+
+  <span class="kw">for</span> (<span class="kw">const</span> tokens <span class="kw">of</span> tokenLevels) {
+    <span class="kw">const</span> paddedPrompt = <span class="fn">padToTokens</span>(basePrompt, tokens);
+    <span class="kw">const</span> quality = <span class="kw">await</span> <span class="fn">evaluateQuality</span>(paddedPrompt, targetTask);
+    results.<span class="fn">push</span>({ tokens, quality });
+    
+    <span class="cm">// 检测相变：质量突然下降超过 30%</span>
+    <span class="kw">if</span> (results.length > <span class="num">1</span>) {
+      <span class="kw">const</span> prev = results[results.length - <span class="num">2</span>];
+      <span class="kw">const</span> drop = (prev.quality - quality) / prev.quality;
+      
+      <span class="kw">if</span> (drop > <span class="num">0.3</span>) {
+        console.<span class="fn">log</span>(<span class="str">`⚡ 相变点发现: ${tokens} tokens`</span>);
+        console.<span class="fn">log</span>(<span class="str">`   质量从 ${prev.quality.toFixed(1)} 跌至 ${quality.toFixed(1)}`</span>);
+        console.<span class="fn">log</span>(<span class="str">`   建议硬限制: ${prev.tokens} tokens`</span>);
+        <span class="kw">break</span>;
+      }
+    }
+  }
+
+  <span class="kw">return</span> results;
+}
+
+<span class="cm">// 在系统中设置硬限制（不是软限制）</span>
+<span class="kw">const</span> CONTEXT_HARD_LIMIT = <span class="num">6000</span>; <span class="cm">// 实测相变点 × 0.75</span>
+
+<span class="kw">function</span> <span class="fn">safeContext</span>(messages: Message[]): Message[] {
+  <span class="kw">const</span> totalTokens = <span class="fn">countTokens</span>(messages);
+  <span class="kw">if</span> (totalTokens &lt;= CONTEXT_HARD_LIMIT) <span class="kw">return</span> messages;
+  
+  <span class="cm">// 不是线性截断，是结构化压缩</span>
+  <span class="kw">return</span> [
+    messages[<span class="num">0</span>],                          <span class="cm">// system prompt 保留</span>
+    ...<span class="fn">summarizeMiddle</span>(messages.<span class="fn">slice</span>(<span class="num">1</span>, -<span class="num">4</span>)), <span class="cm">// 中间压缩</span>
+    ...messages.<span class="fn">slice</span>(-<span class="num">4</span>),                  <span class="cm">// 最近 4 条保留</span>
+  ];
+}</pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式</strong>
+      发现 10 个 agent 开始变慢，加到 12 个试试。这是线性外推思维。相变之后增加更多只会加剧问题，因为协调成本是 O(n²) 的。
+    </div>
+  </div>
+
+  <!-- ===== 04 PID ===== -->
+  <div class="concept" id="pid">
+    <div class="concept-header">
+      <div class="concept-num">04</div>
+      <div class="concept-title-block">
+        <h2>PID 控制器 · PID Controller</h2>
+        <div class="concept-subtitle">经典控制论 · 用于 Agent 输出质量反馈</div>
+      </div>
+      <span class="domain-badge tag-ctrl">控制</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心公式</div>
+      <div class="formula">u(t) = Kp·e(t)  +  Ki·∫e(t)dt  +  Kd·de/dt
+
+e(t)    = 误差 = 目标分数 − 实际分数
+Kp·e    = P 项：当前这次差多少 → 立即修正
+Ki·∫e   = I 项：历史误差积累 → 系统性修正
+Kd·de   = D 项：误差变化速度 → 预判式修正</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">三项的工程映射</div>
+      <table class="decision-table">
+        <tr><th>PID 项</th><th>信号</th><th>Claude Code 中的动作</th></tr>
+        <tr>
+          <td><strong>P（当前误差）</strong></td>
+          <td class="signal">这次输出得 4/10</td>
+          <td class="action">立刻修改这次的 prompt 措辞/结构</td>
+        </tr>
+        <tr>
+          <td><strong>I（历史积累）</strong></td>
+          <td class="signal">最近 10 次平均 5.5/10</td>
+          <td class="action">重写 system prompt，修改 CLAUDE.md 的 agent 规则</td>
+        </tr>
+        <tr>
+          <td><strong>D（变化趋势）</strong></td>
+          <td class="signal">得分从 7→6→5，趋势在恶化</td>
+          <td class="action">预判性重构，不等质量崩溃再改</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — Agent 质量反馈系统</div>
+      <div class="code-header">
+        <span>quality-feedback.ts</span>
+        <span>Content Agent</span>
+      </div>
+<pre><span class="kw">class</span> <span class="var">AgentQualityPID</span> {
+  <span class="kw">private</span> history: <span class="kw">number</span>[] = [];
+  <span class="kw">private</span> kp = <span class="num">0.5</span>, ki = <span class="num">0.1</span>, kd = <span class="num">0.3</span>;
+  <span class="kw">private</span> target = <span class="num">8.5</span>;
+
+  <span class="fn">record</span>(score: <span class="kw">number</span>): <span class="var">CorrectiveAction</span> {
+    this.history.<span class="fn">push</span>(score);
+    
+    <span class="kw">const</span> e = this.target - score;                           <span class="cm">// 当前误差</span>
+    <span class="kw">const</span> recentHistory = this.history.<span class="fn">slice</span>(-<span class="num">10</span>);
+    <span class="kw">const</span> I = recentHistory.<span class="fn">reduce</span>((s, v) => s + (this.target - v), <span class="num">0</span>);
+    <span class="kw">const</span> D = this.history.length > <span class="num">1</span>
+      ? score - this.history[this.history.length - <span class="num">2</span>]  <span class="cm">// 正数=改善，负数=恶化</span>
+      : <span class="num">0</span>;
+    
+    <span class="kw">const</span> signal = this.kp * e + this.ki * I - this.kd * D;
+
+    <span class="cm">// 决策逻辑</span>
+    <span class="kw">if</span> (Math.<span class="fn">abs</span>(e) > <span class="num">3</span>) <span class="kw">return</span> {
+      type: <span class="str">'immediate'</span>,
+      action: <span class="str">'rewrite_user_prompt'</span>,    <span class="cm">// P 大：立即修这次</span>
+      reason: <span class="str">`Score ${score} vs target ${this.target}`</span>
+    };
+
+    <span class="kw">if</span> (I > <span class="num">8</span>) <span class="kw">return</span> {
+      type: <span class="str">'systemic'</span>,
+      action: <span class="str">'update_system_prompt'</span>,    <span class="cm">// I 大：系统性问题</span>
+      reason: <span class="str">`Accumulated error: ${I.toFixed(1)}`</span>
+    };
+
+    <span class="kw">if</span> (D &lt; -<span class="num">1</span>) <span class="kw">return</span> {
+      type: <span class="str">'preemptive'</span>,
+      action: <span class="str">'restructure_agent_pipeline'</span>, <span class="cm">// D 负：趋势恶化</span>
+      reason: <span class="str">`Quality trending down: ${D.toFixed(2)}/call`</span>
+    };
+
+    <span class="kw">return</span> { type: <span class="str">'none'</span>, action: <span class="str">'continue'</span> };
+  }
+}
+
+<span class="cm">// 用法：在 agent 每次执行后记录</span>
+<span class="kw">const</span> pid = <span class="kw">new</span> <span class="var">AgentQualityPID</span>();
+<span class="kw">const</span> result = <span class="kw">await</span> agent.<span class="fn">run</span>(task);
+<span class="kw">const</span> action = pid.<span class="fn">record</span>(<span class="kw">await</span> <span class="fn">evaluate</span>(result));
+<span class="kw">if</span> (action.type !== <span class="str">'none'</span>) <span class="fn">handleCorrection</span>(action);</pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式（只看 P）</strong>
+      每次输出差了就改措辞，从不看历史趋势。结果是过度修正——像没有 D 项的控制器，会在目标附近震荡，无法稳定收敛。
+    </div>
+
+    <div class="quick-ref">
+      <h4>调参直觉</h4>
+      <ul>
+        <li>Kp 太高：修正过猛，质量在目标附近上下震荡</li>
+        <li>Ki 太高：对历史误差太敏感，频繁触发"系统性重写"</li>
+        <li>Kd 太高：对趋势过于敏感，还没到问题就开始重构</li>
+        <li>推荐起点：Kp=0.5, Ki=0.1, Kd=0.3，根据实际震荡情况调整</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== 05 奇异吸引子 ===== -->
+  <div class="concept" id="attractor">
+    <div class="concept-header">
+      <div class="concept-num">05</div>
+      <div class="concept-title-block">
+        <h2>奇异吸引子 · Strange Attractor</h2>
+        <div class="concept-subtitle">混沌理论 · 用于 System Prompt 边界设计</div>
+      </div>
+      <span class="domain-badge tag-phys">物理</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心直觉</div>
+      <div class="formula">混沌系统轨迹：不可预测单次路径，但永远在有界区域内
+LLM 输出：不可完全控制单次输出，但可以定义"不可能区域"
+
+好的 system prompt ≠ 控制每次输出
+好的 system prompt = 定义输出的可能空间（吸引域）
+
+原则：约束"什么绝对不出现" > 规定"必须出现什么"</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Claude Code 场景 — 设计 内容 Agent 的边界</div>
+      <div class="code-header">
+        <span>system-prompt.md</span>
+        <span>Social Agent</span>
+      </div>
+<pre><span class="cm">❌ 错误：试图控制每次输出（脆弱，过拟合）</span>
+
+你是一个社媒文案 agent。
+每次输出必须：
+- 第一句以数字或问题开头
+- 第二句解释背景
+- 第三句给出行动号召
+- 结尾用 3 个 emoji
+- 字数在 180-220 字之间
+...（30条规则）
+
+<span class="cm">→ 对某类 topic 完全失控，规则相互冲突</span>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+<span class="cm">✅ 正确：定义吸引域边界（鲁棒，泛化性强）</span>
+
+## 引力中心（目标区域）
+你生成的内容在语气上贴近真实用户，不像 AI，
+在信息上聚焦有价值的洞察，不是空泛的感叹。
+
+## 排斥边界（绝对不出现）
+- 不使用"赋能/赋权/生态"等营销黑话
+- 不使用 5 个以上 emoji（视觉噪音）
+- 不承诺具体数字收益（合规风险）
+- 不提及竞争产品名称
+- 不超过 280 字
+
+## 自由区间（故意不规定）
+- 开头方式：自由，根据内容选择最自然的
+- 句子数量：自由，够清晰就行
+- 话题角度：自由，选最有趣的切入点</pre>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — 用程序化方式定义吸引域</div>
+      <div class="code-header">
+        <span>attractor-boundary.ts</span>
+      </div>
+<pre><span class="cm">// 吸引域验证器：检查输出是否在边界内</span>
+<span class="kw">interface</span> <span class="var">AttractorBoundary</span> {
+  hardRules: {               <span class="cm">// 排斥边界：违反 = 重新生成</span>
+    maxLength: <span class="kw">number</span>;
+    forbiddenPatterns: RegExp[];
+    requiredElements?: <span class="kw">string</span>[];
+  };
+  softGuidelines: <span class="kw">string</span>[];  <span class="cm">// 引力中心：写在 prompt 里，不做硬检查</span>
+}
+
+<span class="kw">const</span> xerpaAgentBoundary: <span class="var">AttractorBoundary</span> = {
+  hardRules: {
+    maxLength: <span class="num">280</span>,
+    forbiddenPatterns: [
+      <span class="str">/赋能|赋权|生态/g</span>,
+      <span class="str">/保证.*%收益|承诺.*倍/g</span>,
+      <span class="str">/(competitor1|competitor2)/gi</span>,
+      <span class="str">/[^\S\r\n]{2,}/g</span>,  <span class="cm">// 多余空格</span>
+    ],
+  },
+  softGuidelines: [
+    <span class="str">'语气真实，不像营销文案'</span>,
+    <span class="str">'优先用具体数据替代形容词'</span>,
+  ],
+};
+
+<span class="kw">async function</span> <span class="fn">generateWithBoundary</span>(
+  prompt: <span class="kw">string</span>,
+  boundary: <span class="var">AttractorBoundary</span>,
+  maxRetries = <span class="num">3</span>
+): <span class="kw">Promise</span>&lt;<span class="kw">string</span>&gt; {
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; maxRetries; i++) {
+    <span class="kw">const</span> output = <span class="kw">await</span> <span class="fn">callClaude</span>(prompt);
+    <span class="kw">const</span> violation = <span class="fn">checkBoundary</span>(output, boundary.hardRules);
+    
+    <span class="kw">if</span> (!violation) <span class="kw">return</span> output; <span class="cm">// 在吸引域内</span>
+    
+    <span class="cm">// 把违规信息加回 prompt，让模型自我修正</span>
+    prompt += <span class="str">`\n\n[修正提示] 上次违规: ${violation}，请重新生成`</span>;
+  }
+  <span class="kw">throw new</span> Error(<span class="str">'无法在边界内生成合格内容'</span>);
+}</pre>
+    </div>
+
+    <div class="callout callout-tip">
+      <strong>✓ 核心洞见</strong>
+      你无法复现某次完美输出，但你可以让"差的输出"无处出现。设计吸引域比复现单次输出更实用。
+    </div>
+  </div>
+
+  <!-- ===== 06 香农熵 ===== -->
+  <div class="concept" id="entropy">
+    <div class="concept-header">
+      <div class="concept-num">06</div>
+      <div class="concept-title-block">
+        <h2>香农熵 · Shannon Entropy</h2>
+        <div class="concept-subtitle">信息论 · 用于 Prompt 质量诊断</div>
+      </div>
+      <span class="domain-badge tag-info">信息</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心公式</div>
+      <div class="formula">H = −Σ p(x) · log₂p(x)
+
+熵高 → 输出分布扁平 → prompt 有歧义
+熵低 → 输出分布尖峰 → prompt 很明确
+
+实操：同一个 prompt 跑 5-10 次，观察输出分散程度
+不需要算公式，只需要看输出多样性</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">四级熵诊断</div>
+      <table class="decision-table">
+        <tr><th>症状（跑 5 次后）</th><th>熵级别</th><th>根因</th><th>修复</th></tr>
+        <tr>
+          <td>结构都不一样，甚至有的用中文有的用英文</td>
+          <td class="signal">极高熵</td>
+          <td>prompt 完全歧义</td>
+          <td class="action">重写，加格式约束</td>
+        </tr>
+        <tr>
+          <td>结构相同，内容切角差异很大</td>
+          <td class="signal">高熵</td>
+          <td>任务范围模糊</td>
+          <td class="action">加 few-shot examples</td>
+        </tr>
+        <tr>
+          <td>结构内容相似，但细节不同</td>
+          <td class="signal">中熵</td>
+          <td>正常的创造性变化</td>
+          <td class="action">如果这就是目标，可以接受</td>
+        </tr>
+        <tr>
+          <td>几乎完全相同（95%+）</td>
+          <td class="signal">低熵</td>
+          <td>prompt 过于确定</td>
+          <td class="action">如果需要多样性，放松约束</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — Prompt 熵诊断工具</div>
+      <div class="code-header">
+        <span>entropy-checker.ts</span>
+        <span>Claude Code 脚本</span>
+      </div>
+<pre><span class="cm">// 用于在 Claude Code 中快速诊断 prompt 质量</span>
+<span class="cm">// 运行：cc run check-entropy --prompt="your prompt"</span>
+
+<span class="kw">import</span> { <span class="var">Claude</span> } <span class="kw">from</span> <span class="str">'@anthropic-ai/sdk'</span>;
+
+<span class="kw">async function</span> <span class="fn">diagnosePromptEntropy</span>(
+  prompt: <span class="kw">string</span>,
+  n = <span class="num">5</span>
+): <span class="kw">Promise</span>&lt;<span class="var">EntropDiagnosis</span>&gt; {
+  <span class="kw">const</span> client = <span class="kw">new</span> <span class="var">Claude</span>();
+  
+  <span class="cm">// 并行跑 n 次</span>
+  <span class="kw">const</span> outputs = <span class="kw">await</span> Promise.<span class="fn">all</span>(
+    <span class="var">Array</span>.<span class="fn">from</span>({ length: n }, () =>
+      client.messages.<span class="fn">create</span>({
+        model: <span class="str">'claude-opus-4-5'</span>,
+        max_tokens: <span class="num">500</span>,
+        messages: [{ role: <span class="str">'user'</span>, content: prompt }],
+        temperature: <span class="num">1.0</span>,  <span class="cm">// 使用默认温度，不要降温</span>
+      })
+    )
+  );
+  
+  <span class="kw">const</span> texts = outputs.<span class="fn">map</span>(o => o.content[<span class="num">0</span>].text);
+
+  <span class="cm">// 简单结构相似度：比较段落数、总字数、关键词</span>
+  <span class="kw">const</span> structures = texts.<span class="fn">map</span>(t => ({
+    paragraphs: t.<span class="fn">split</span>(<span class="str">'\n\n'</span>).length,
+    wordCount: t.<span class="fn">split</span>(<span class="str">' '</span>).length,
+    hasCode: t.<span class="fn">includes</span>(<span class="str">'```'</span>),
+    hasNumberedList: <span class="str">/^\d+\./m</span>.<span class="fn">test</span>(t),
+  }));
+
+  <span class="cm">// 计算结构一致性（越接近 1 = 低熵）</span>
+  <span class="kw">const</span> structuralConsistency = <span class="fn">calcConsistency</span>(structures);
+  
+  <span class="kw">return</span> {
+    sampleOutputs: texts,
+    structuralConsistency,         <span class="cm">// 0-1，越高越一致</span>
+    entropyLevel: structuralConsistency > <span class="num">0.8</span> ? <span class="str">'low'</span>
+                : structuralConsistency > <span class="num">0.5</span> ? <span class="str">'medium'</span>
+                : <span class="str">'high'</span>,
+    diagnosis: <span class="fn">diagnose</span>(structures, texts),
+  };
+}
+
+<span class="cm">// 在 Claude Code 工作流中:</span>
+<span class="cm">// cc run diagnose-entropy → 识别问题 → cc run fix-prompt → 再诊断</span></pre>
+    </div>
+
+    <div class="callout callout-tip">
+      <strong>✓ 最快用法</strong>
+      不需要代码。对任何 prompt，脑内运行 3 次，想象输出的结构差异有多大。差异大 → 高熵 → 需要加约束。这个直觉训练 2-3 次就会内化。
+    </div>
+
+    <div class="quick-ref">
+      <h4>降熵工具箱（按效果排序）</h4>
+      <ul>
+        <li>指定输出格式（JSON/Markdown结构/固定段落数）</li>
+        <li>加 2-3 个 few-shot examples（最有效）</li>
+        <li>指定输出长度范围（字数或 token 数）</li>
+        <li>指定视角/角色（"你是...的专家"）</li>
+        <li>加负面示例（"不要像这样..."）</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== 07 帕累托 ===== -->
+  <div class="concept" id="pareto">
+    <div class="concept-header">
+      <div class="concept-num">07</div>
+      <div class="concept-title-block">
+        <h2>帕累托前沿 · Pareto Front</h2>
+        <div class="concept-subtitle">多目标优化 · 用于 Agent 架构决策</div>
+      </div>
+      <span class="domain-badge tag-math">数学</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心直觉</div>
+      <div class="formula">在多目标优化中，不存在一个解在所有维度都最优
+改善任何一个维度，必然牺牲另一个 — 这是数学必然
+
+实践含义：
+1. 先明确你的约束优先级
+2. 找到帕累托前沿上对应的点
+3. 不要在"前沿内部"浪费时间（存在同时更好的解）</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Claude Code 场景 — Agent 配置选型</div>
+      <div class="scenario">
+        <div class="scenario-tag">真实场景</div>
+        <p>为 AI 内容 agent 选择：模型、并发数、重试策略。速度/质量/成本三者不能同时最优，必须先明确优先级再选配置。</p>
+      </div>
+      <div class="code-header">
+        <span>agent-config-selector.ts</span>
+      </div>
+<pre><span class="cm">// 三条产品线的帕累托配置</span>
+<span class="kw">const</span> paretoConfigs = {
+  <span class="cm">// FujiPay 支付确认：速度 > 质量 > 成本</span>
+  <span class="str">'fujipay-confirm'</span>: {
+    model: <span class="str">'claude-haiku-4-5'</span>,
+    concurrency: <span class="num">10</span>,
+    maxRetries: <span class="num">1</span>,          <span class="cm">// 宁可失败，不能超时</span>
+    timeoutMs: <span class="num">2000</span>,
+    streaming: <span class="kw">true</span>,
+    tradeoff: <span class="str">'speed=10, quality=6, cost=9'</span>,
+  },
+  
+  <span class="cm">// 内容生成：质量 > 成本 > 速度</span>
+  <span class="str">'xerpa-content'</span>: {
+    model: <span class="str">'claude-sonnet-4-6'</span>,
+    concurrency: <span class="num">3</span>,
+    maxRetries: <span class="num">3</span>,          <span class="cm">// 允许重试，追求质量</span>
+    timeoutMs: <span class="num">30000</span>,
+    streaming: <span class="kw">false</span>,
+    tradeoff: <span class="str">'speed=4, quality=9, cost=5'</span>,
+  },
+  
+  <span class="cm">// UXLINK 数据分析：成本 > 质量 > 速度</span>
+  <span class="str">'uxlink-analytics'</span>: {
+    model: <span class="str">'claude-haiku-4-5'</span>,
+    concurrency: <span class="num">1</span>,          <span class="cm">// 串行，省 token</span>
+    maxRetries: <span class="num">2</span>,
+    timeoutMs: <span class="num">60000</span>,        <span class="cm">// 允许慢</span>
+    cacheEnabled: <span class="kw">true</span>,     <span class="cm">// 激进缓存</span>
+    tradeoff: <span class="str">'speed=2, quality=7, cost=10'</span>,
+  },
+};
+
+<span class="cm">// 关键：每条业务线明确自己在哪个前沿点，不混用</span>
+<span class="kw">function</span> <span class="fn">getAgentConfig</span>(productLine: <span class="kw">string</span>) {
+  <span class="kw">const</span> config = paretoConfigs[productLine];
+  <span class="kw">if</span> (!config) <span class="kw">throw new</span> Error(
+    <span class="str">`Unknown product line: ${productLine}. Must explicitly define tradeoffs first.`</span>
+  );
+  <span class="kw">return</span> config;
+}</pre>
+    </div>
+
+    <div class="block">
+      <div class="block-label">帕累托支配检查 — 找出"绝对差"的配置</div>
+      <div class="code-header">
+        <span>pareto-check.ts</span>
+      </div>
+<pre><span class="cm">// 帕累托支配：如果 A 在所有维度都 >= B，则 B 被支配（B 是次优的）</span>
+<span class="kw">function</span> <span class="fn">isDominated</span>(
+  candidate: <span class="var">Config</span>,
+  others: <span class="var">Config</span>[],
+  objectives: (<span class="kw">keyof</span> <span class="var">Config</span>)[]
+): <span class="kw">boolean</span> {
+  <span class="kw">return</span> others.<span class="fn">some</span>(other =>
+    objectives.<span class="fn">every</span>(o => other[o] >= candidate[o]) &&
+    objectives.<span class="fn">some</span>(o => other[o] > candidate[o])
+  );
+}
+
+<span class="cm">// 使用：淘汰被支配的配置</span>
+<span class="kw">const</span> paretoFront = configs.<span class="fn">filter</span>(c =>
+  !<span class="fn">isDominated</span>(c, configs, [<span class="str">'speed'</span>, <span class="str">'quality'</span>, <span class="str">'cost'</span>])
+);
+<span class="cm">// 剩下的才值得讨论，它们才是真正的 tradeoff 选择</span></pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式</strong>
+      给同一个 agent 设置"又快又好又便宜"的目标，然后不停调参试图同时提升三个维度。这违反了帕累托定理。正确做法是先决定"什么最重要"，再接受另外两个维度的牺牲。
+    </div>
+  </div>
+
+  <!-- ===== 信号表 ===== -->
+  <div class="concept" id="signals">
+    <div class="concept-header">
+      <div class="concept-num">Ref</div>
+      <div class="concept-title-block">
+        <h2>识别信号 — 什么问题用什么模式</h2>
+        <div class="concept-subtitle">快速查阅表</div>
+      </div>
+    </div>
+
+    <table class="decision-table">
+      <tr><th>你遇到的问题</th><th>对应模式</th><th>关键动作</th></tr>
+      <tr>
+        <td>Prompt 调了很久，质量卡在某个分数上不去</td>
+        <td class="signal">模拟退火</td>
+        <td class="action">升温，换结构，接受暂时退步</td>
+      </tr>
+      <tr>
+        <td>Multi-agent 并行了，但结果不一致/互相冲突</td>
+        <td class="signal">傅里叶分解</td>
+        <td class="action">做正交测试，找隐性依赖</td>
+      </tr>
+      <tr>
+        <td>多加了一些东西（agent/context/rules），系统突然变差</td>
+        <td class="signal">相变</td>
+        <td class="action">你越过临界点了，退回找相变点</td>
+      </tr>
+      <tr>
+        <td>Agent 质量时好时坏，不知道如何系统性改善</td>
+        <td class="signal">PID 控制</td>
+        <td class="action">区分 P/I/D，对症下药</td>
+      </tr>
+      <tr>
+        <td>System prompt 很长但模型经常"跑偏"</td>
+        <td class="signal">奇异吸引子</td>
+        <td class="action">改成"绝对不做什么"的边界设计</td>
+      </tr>
+      <tr>
+        <td>同一个 prompt 跑出来差异很大，不稳定</td>
+        <td class="signal">香农熵</td>
+        <td class="action">高熵 = prompt 有歧义，加约束/examples</td>
+      </tr>
+      <tr>
+        <td>团队讨论 agent 配置，争论"又快又好又便宜"</td>
+        <td class="signal">帕累托前沿</td>
+        <td class="action">先定优先级，不存在全部最优</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ===== 反模式 ===== -->
+  <div class="concept" id="antipatterns">
+    <div class="concept-header">
+      <div class="concept-num">Ref</div>
+      <div class="concept-title-block">
+        <h2>反模式对照表</h2>
+        <div class="concept-subtitle">常见错误 vs 正确思路</div>
+      </div>
+    </div>
+
+    <table class="decision-table">
+      <tr><th>常见错误思路</th><th>背后的误区</th><th>正确模式</th></tr>
+      <tr>
+        <td>"再加几条规则 prompt 就会好"</td>
+        <td>忽视相变临界点</td>
+        <td class="action">测临界点，超过后拆 sub-agent</td>
+      </tr>
+      <tr>
+        <td>"这次输出好，把它硬编码成模板"</td>
+        <td>混淆单次输出与吸引域</td>
+        <td class="action">设计边界，不复现单次</td>
+      </tr>
+      <tr>
+        <td>"Promise.all 包起来就是并行"</td>
+        <td>没做正交检查</td>
+        <td class="action">先画依赖图，再决定并发结构</td>
+      </tr>
+      <tr>
+        <td>"每次输出差了就改措辞"</td>
+        <td>只看 P 项，忽视 I 和 D</td>
+        <td class="action">区分本次误差/历史积累/趋势</td>
+      </tr>
+      <tr>
+        <td>"输出不稳定，降低 temperature"</td>
+        <td>把熵问题当温度问题</td>
+        <td class="action">先诊断 prompt 是否有歧义</td>
+      </tr>
+      <tr>
+        <td>"我们要最快最好最省钱的方案"</td>
+        <td>无视帕累托约束</td>
+        <td class="action">先定优先级，再找前沿上的点</td>
+      </tr>
+      <tr>
+        <td>"调了两天，这个 prompt 已经最优了"</td>
+        <td>局部最优，没有退火</td>
+        <td class="action">换结构探索，接受暂时退步</td>
+      </tr>
+    </table>
+  </div>
+
+</main>
+
+<script>
+  const sections = document.querySelectorAll('.concept[id]');
+  const navLinks = document.querySelectorAll('nav a[href^="#"]');
+  
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`nav a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3, rootMargin: '-10% 0px -60% 0px' });
+  
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

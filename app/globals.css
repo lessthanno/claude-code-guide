@@ -228,6 +228,9 @@ pre {
 .formula-note { font-size: 12px; color: var(--text3); margin-top: 4px; padding-left: 4px; }
 
 .handbook-body pre { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 18px 20px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.7; color: #c8c0b4; margin-bottom: 16px; }
+.handbook-body .decision-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+.handbook-body .decision-table th,
+.handbook-body .decision-table td { white-space: normal; min-width: 120px; }
 .code-header { display: flex; align-items: center; justify-content: space-between; background: var(--bg4); border: 1px solid var(--border); border-bottom: none; border-radius: 6px 6px 0 0; padding: 8px 14px; font-size: 11px; color: var(--text3); font-family: var(--mono); }
 .code-header + pre { border-radius: 0 0 6px 6px; margin-top: 0; }
 .kw { color: #8b6fb5; } .fn { color: #4a9a6f; } .str { color: #a07a30; }

@@ -14,7 +14,7 @@ const CHAPTERS = [
 ]
 
 function getHandbookContent(): string {
-  const filePath = path.join(process.cwd(), 'public', 'handbook', 'index.html')
+  const filePath = path.join(process.cwd(), 'data', 'handbook', 'mental-models.html')
   const raw = fs.readFileSync(filePath, 'utf8')
   const match = raw.match(/<main>([\s\S]*?)<\/main>/)
   return match ? match[1] : ''
