@@ -97,7 +97,7 @@ export default function Sidebar() {
         borderTop: '1px solid var(--border)',
         padding: '12px 0',
       }}>
-        <NavLink href="https://github.com" external emoji="⬡">GitHub 开源</NavLink>
+        <NavLink href="https://github.com/lessthanno/claude-code-guide" external emoji="⬡">GitHub 开源</NavLink>
         <NavLink href="https://x.com/0xhaoxyz" external emoji="𝕏">关注作者</NavLink>
       </div>
     </aside>
