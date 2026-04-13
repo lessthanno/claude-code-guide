@@ -16,7 +16,7 @@ export const SPACE_GROUPS = [
     links: [
       { label: '快速开始', href: '/start', emoji: '📌' },
       { label: '加入 Pro', href: '/pro', emoji: '⭐️' },
-      { label: '心智模型手册', href: '/handbook/', emoji: '📖' },
+      { label: '心智模型手册', href: '/handbook', emoji: '📖' },
     ],
   },
   {

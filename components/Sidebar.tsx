@@ -68,19 +68,11 @@ export default function Sidebar() {
               fontWeight: 600,
             }}>{group.label}</div>
 
-            {group.links.map(link => {
-              // Public-folder static pages (e.g. /handbook/) need raw <a> with basePath
-              const isStatic = link.href.startsWith('/handbook')
-              return isStatic ? (
-                <NavLink key={link.href} href={`${BASE}${link.href}`} active={false} emoji={link.emoji} external>
-                  {link.label}
-                </NavLink>
-              ) : (
-                <NavLink key={link.href} href={link.href} active={pathname === link.href} emoji={link.emoji}>
-                  {link.label}
-                </NavLink>
-              )
-            })}
+            {group.links.map(link => (
+              <NavLink key={link.href} href={link.href} active={pathname === link.href} emoji={link.emoji}>
+                {link.label}
+              </NavLink>
+            ))}
 
             {group.spaces.map((ch) => {
               const meta = CHANNEL_META[ch as Channel]

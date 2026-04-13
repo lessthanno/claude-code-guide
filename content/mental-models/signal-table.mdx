@@ -19,42 +19,47 @@ pro: false
       </div>
     </div>
 
-    <table class="decision-table">
-      <tr><th>你遇到的问题</th><th>对应模式</th><th>关键动作</th></tr>
+    <table class="decision-table" style="table-layout:fixed;width:100%">
+      <colgroup>
+        <col style="width:36%" />
+        <col style="width:14%" />
+        <col style="width:50%" />
+      </colgroup>
+      <tr><th>你遇到的问题</th><th>对应模式</th><th>具体怎么做</th></tr>
       <tr>
-        <td>Prompt 调了很久，质量卡在某个分数上不去</td>
+        <td>Prompt 反复调整，质量卡在某个分数上不去，小改动没有效果</td>
         <td class="signal">模拟退火</td>
-        <td class="action">升温，换结构，接受暂时退步</td>
+        <td class="action">把 temperature 调到 0.8+，彻底换一种 prompt 结构（如从步骤式改成示例式），接受前几次变差——局部最优必须靠"退步"才能跳出去</td>
       </tr>
       <tr>
-        <td>Multi-agent 并行了，但结果不一致/互相冲突</td>
+        <td>Multi-agent 并行跑，但不同 agent 输出互相矛盾，合并结果一团糟</td>
         <td class="signal">傅里叶分解</td>
-        <td class="action">做正交测试，找隐性依赖</td>
+        <td class="action">逐个隔离 agent 单独测试，找出哪两个任务共享了同一个隐性状态（context/memory/工具调用顺序）——冲突根源在耦合，不在模型</td>
       </tr>
       <tr>
-        <td>多加了一些东西（agent/context/rules），系统突然变差</td>
+        <td>加了新 agent、新规则或更长 context 之后，整体质量突然下降</td>
         <td class="signal">相变</td>
-        <td class="action">你越过临界点了，退回找相变点</td>
+        <td class="action">逐一撤销最近加入的组件，定位质量突变的那个临界点；系统复杂度有阈值，越过后行为模式会整体改变</td>
       </tr>
       <tr>
-        <td>Agent 质量时好时坏，不知道如何系统性改善</td>
+        <td>Agent 输出质量忽好忽坏，没有规律，不知道从哪里下手</td>
         <td class="signal">PID 控制</td>
-        <td class="action">区分 P/I/D，对症下药</td>
+        <td class="action">分清三类误差：当次输出偏差（P → 改 prompt 措辞）、历史累积偏移（I → 清 context/memory 重置基线）、输出抖动（D → 加格式约束锁定结构）；对症各自处理</td>
       </tr>
       <tr>
-        <td>System prompt 很长但模型经常"跑偏"</td>
+        <td>System prompt 写了很多指令，但模型还是经常偏离，越加越乱</td>
         <td class="signal">奇异吸引子</td>
-        <td class="action">改成"绝对不做什么"的边界设计</td>
+        <td class="action">把正向指令（"你应该做 X"）换成边界约束（"绝对不要做 Y"）；吸引子靠排斥力定义，而不是靠正向引力——负约束比正约束更稳定</td>
       </tr>
       <tr>
-        <td>同一个 prompt 跑出来差异很大，不稳定</td>
+        <td>同一个 prompt 多次运行，输出差异很大，结果不可预期</td>
         <td class="signal">香农熵</td>
-        <td class="action">高熵 = prompt 有歧义，加约束/examples</td>
+        <td class="action">对每个模糊点各加一个 few-shot example 或明确约束，直到同一 prompt 连续 10 次输出格式一致为止；高熵=歧义多，消歧义是唯一解法</td>
       </tr>
       <tr>
-        <td>团队讨论 agent 配置，争论"又快又好又便宜"</td>
+        <td>团队讨论 agent 配置时，陷入"又要快、又要好、又要便宜"的死循环</td>
         <td class="signal">帕累托前沿</td>
-        <td class="action">先定优先级，不存在全部最优</td>
+        <td class="action">先写下三个指标的相对权重（如速度 5 / 成本 2 / 质量 3），用权重排方案优先级；不存在全部最优——决策前必须先定取舍</td>
       </tr>
     </table>
   </div>

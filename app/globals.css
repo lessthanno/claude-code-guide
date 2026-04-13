@@ -209,3 +209,107 @@ pre {
   padding: 1px 5px;
   color: var(--accent);
 }
+
+/* ─── Handbook styles ───────────────────────────────────────── */
+.concept { margin-bottom: 72px; padding-bottom: 64px; border-bottom: 1px solid var(--border); }
+.concept:last-child { border-bottom: none; }
+.concept-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px; }
+.concept-num { font-family: var(--mono); font-size: 12px; color: var(--text3); padding-top: 5px; min-width: 24px; }
+.concept-title-block h2 { font-size: 19px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; margin-bottom: 4px; }
+.concept-subtitle { font-size: 12px; color: var(--text3); letter-spacing: 0.05em; text-transform: uppercase; }
+.domain-badge { margin-left: auto; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; flex-shrink: 0; }
+
+.block { margin-bottom: 24px; }
+.block-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.block-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.block p { color: var(--text2); font-size: 13.5px; line-height: 1.75; }
+
+.formula { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 14px 18px; font-family: var(--mono); font-size: 13px; color: var(--accent); line-height: 1.8; margin-bottom: 8px; overflow-x: auto; white-space: pre; }
+.formula-note { font-size: 12px; color: var(--text3); margin-top: 4px; padding-left: 4px; }
+
+.handbook-body pre { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 18px 20px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.7; color: #c8c0b4; margin-bottom: 16px; }
+.code-header { display: flex; align-items: center; justify-content: space-between; background: var(--bg4); border: 1px solid var(--border); border-bottom: none; border-radius: 6px 6px 0 0; padding: 8px 14px; font-size: 11px; color: var(--text3); font-family: var(--mono); }
+.code-header + pre { border-radius: 0 0 6px 6px; margin-top: 0; }
+.kw { color: #8b6fb5; } .fn { color: #4a9a6f; } .str { color: #a07a30; }
+.cm { color: #555; font-style: italic; } .num { color: #4a7ab5; } .var { color: #c8b89a; }
+
+.scenario { background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid var(--accent2); border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 16px 0; }
+.scenario-tag { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent2); margin-bottom: 8px; font-weight: 600; }
+.scenario p { font-size: 13px; color: var(--text2); line-height: 1.7; }
+
+.callout { border-radius: 6px; padding: 14px 18px; margin: 16px 0; font-size: 13px; line-height: 1.7; }
+.callout-warn { background: var(--red-bg); border: 1px solid #3a1515; color: #c87070; }
+.callout-tip { background: var(--green-bg); border: 1px solid #1a3a25; color: #70b890; }
+.callout-info { background: var(--blue-bg); border: 1px solid #152040; color: #7090c8; }
+.callout strong { display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; opacity: 0.8; }
+
+.quick-ref { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin: 16px 0; }
+.quick-ref h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 12px; }
+.quick-ref ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.quick-ref li { font-size: 13px; color: var(--text2); display: flex; gap: 10px; align-items: flex-start; }
+.quick-ref li::before { content: '→'; color: var(--text3); flex-shrink: 0; margin-top: 1px; }
+
+.page-header { margin-bottom: 56px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+.page-header h1 { font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 8px; letter-spacing: -0.02em; }
+.page-header p { color: var(--text2); font-size: 13px; line-height: 1.7; }
+.meta-pills { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border2); color: var(--text3); letter-spacing: 0.03em; }
+.toc { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 24px; }
+.toc-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; text-decoration: none; transition: border-color 0.15s; display: block; }
+.toc-item:hover { border-color: var(--border2); }
+.toc-num { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+.toc-name { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.toc-domain { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+.tag-phys { background: #1a1520; color: #8b6fb5; }
+.tag-math { background: #0d1f15; color: #4a9a6f; }
+.tag-ctrl { background: #0d1525; color: #4a7ab5; }
+.tag-info { background: #1f180d; color: #a07a30; }
+hr.divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+/* ─── Decision Table (signal-table) ─────────────────────────── */
+.decision-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  margin: 8px 0 20px;
+  table-layout: fixed;
+}
+.decision-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border2);
+}
+.decision-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+  vertical-align: top;
+  line-height: 1.6;
+}
+.decision-table tr:last-child td { border-bottom: none; }
+.decision-table tr:hover td { background: var(--bg2); }
+
+/* 列宽分配：问题 38% | 模式 14% | 怎么做 48% */
+.decision-table th:nth-child(1),
+.decision-table td:nth-child(1) { width: 38%; }
+.decision-table th:nth-child(2),
+.decision-table td:nth-child(2) { width: 14%; }
+.decision-table th:nth-child(3),
+.decision-table td:nth-child(3) { width: 48%; }
+
+.decision-table .signal {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.decision-table .action {
+  color: var(--text2);
+}
