@@ -1,0 +1,164 @@
+---
+num: "09"
+title: "卡尔曼滤波 · Kalman Filter"
+titleEn: "Kalman Filter"
+subtitle: "控制论 · 用于 Agent 真实质量状态估计"
+domain: control
+tags: ["agent", "evaluation", "feedback"]
+date: "2026-04-14"
+pro: false
+---
+
+
+<div class="concept" id="kalman">
+    <div class="concept-header">
+      <div class="concept-num">09</div>
+      <div class="concept-title-block">
+        <h2>卡尔曼滤波 · Kalman Filter</h2>
+        <div class="concept-subtitle">控制论 · 用于 Agent 真实质量状态估计</div>
+      </div>
+      <span class="domain-badge tag-ctrl">控制</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心公式</div>
+      <div class="formula">x̂ₙ = x̂ₙ₋₁ + K · (zₙ − x̂ₙ₋₁)
+
+x̂ₙ   = 当前估计的"真实质量"
+x̂ₙ₋₁ = 上一步的估计
+zₙ   = 本次实际观测值（单次评分）
+K    = 卡尔曼增益 = 信任观测 vs 信任预测的权重
+
+K 高（接近 1）→ 更信任新观测，估计变化快
+K 低（接近 0）→ 更信任历史，估计变化慢</div>
+      <div class="formula-note">关键直觉：单次评分不等于真实质量。真实质量 = 历史估计 × (1-K) + 当前观测 × K</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">为什么需要卡尔曼滤波</div>
+      <div class="scenario">
+        <div class="scenario-tag">真实场景</div>
+        <p>你的内容 agent 昨天评分 8/10，今天突然 4/10——是模型真的变差了，还是那篇内容本来就难？卡尔曼滤波帮你区分"噪声"和"真实状态变化"。</p>
+      </div>
+      <table class="decision-table">
+        <tr><th>观测序列</th><th>原始判断</th><th>卡尔曼估计（K=0.3）</th></tr>
+        <tr>
+          <td>8, 8, 8, 4, 8, 8</td>
+          <td class="signal">看到 4 → 系统崩了</td>
+          <td class="action">x̂ = 7.9 → 4 是噪声，系统仍然正常</td>
+        </tr>
+        <tr>
+          <td>8, 7, 6, 5, 4, 3</td>
+          <td class="signal">还好，最新是 3</td>
+          <td class="action">x̂ = 5.8 → 趋势恶化，需要干预</td>
+        </tr>
+        <tr>
+          <td>4, 5, 4, 5, 4, 5</td>
+          <td class="signal">震荡，不知道咋办</td>
+          <td class="action">x̂ ≈ 4.5 → 系统性问题，不是噪声</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — Agent 质量状态跟踪</div>
+      <div class="code-header">
+        <span>quality-tracker.ts</span>
+        <span>Agent 监控层</span>
+      </div>
+<pre><span class="kw">class</span> <span class="var">KalmanQualityTracker</span> {
+  <span class="kw">private</span> estimate: <span class="kw">number</span>;      <span class="cm">// 当前质量估计</span>
+  <span class="kw">private</span> uncertainty: <span class="kw">number</span>;   <span class="cm">// 估计的不确定性</span>
+  <span class="kw">private</span> processNoise: <span class="kw">number</span>;  <span class="cm">// 系统变化速度</span>
+  <span class="kw">private</span> observationNoise: <span class="kw">number</span>; <span class="cm">// 测量噪声大小</span>
+
+  <span class="kw">constructor</span>(initialEstimate = <span class="num">7</span>, options = {
+    processNoise: <span class="num">0.1</span>,      <span class="cm">// 质量不会突然大变</span>
+    observationNoise: <span class="num">2</span>,    <span class="cm">// 单次评分误差约 ±2</span>
+  }) {
+    <span class="kw">this</span>.estimate = initialEstimate;
+    <span class="kw">this</span>.uncertainty = <span class="num">1</span>;
+    <span class="kw">this</span>.processNoise = options.processNoise;
+    <span class="kw">this</span>.observationNoise = options.observationNoise;
+  }
+
+  <span class="fn">update</span>(observed: <span class="kw">number</span>): {
+    estimate: <span class="kw">number</span>;
+    kalmanGain: <span class="kw">number</span>;
+    status: <span class="str">'normal' | 'degrading' | 'noise'</span>;
+  } {
+    <span class="cm">// 预测步骤：不确定性随时间增长</span>
+    <span class="kw">const</span> predictedUncertainty = <span class="kw">this</span>.uncertainty + <span class="kw">this</span>.processNoise;
+
+    <span class="cm">// 卡尔曼增益：平衡历史估计 vs 新观测</span>
+    <span class="kw">const</span> K = predictedUncertainty / (predictedUncertainty + <span class="kw">this</span>.observationNoise);
+
+    <span class="cm">// 更新估计</span>
+    <span class="kw">const</span> prevEstimate = <span class="kw">this</span>.estimate;
+    <span class="kw">this</span>.estimate = <span class="kw">this</span>.estimate + K * (observed - <span class="kw">this</span>.estimate);
+    <span class="kw">this</span>.uncertainty = (<span class="num">1</span> - K) * predictedUncertainty;
+
+    <span class="cm">// 判断是噪声还是趋势</span>
+    <span class="kw">const</span> deviation = Math.<span class="fn">abs</span>(observed - prevEstimate);
+    <span class="kw">const</span> trend = <span class="kw">this</span>.estimate - prevEstimate;
+
+    <span class="kw">return</span> {
+      estimate: Math.<span class="fn">round</span>(<span class="kw">this</span>.estimate * <span class="num">10</span>) / <span class="num">10</span>,
+      kalmanGain: Math.<span class="fn">round</span>(K * <span class="num">100</span>) / <span class="num">100</span>,
+      status: deviation > <span class="num">3</span> && Math.<span class="fn">abs</span>(trend) < <span class="num">0.5</span> ? <span class="str">'noise'</span>
+            : trend < -<span class="num">0.3</span> ? <span class="str">'degrading'</span>
+            : <span class="str">'normal'</span>,
+    };
+  }
+}
+
+<span class="cm">// 用法：在 agent pipeline 中接入</span>
+<span class="kw">const</span> tracker = <span class="kw">new</span> <span class="var">KalmanQualityTracker</span>(<span class="num">7.5</span>);
+
+<span class="kw">const</span> result = <span class="kw">await</span> agent.<span class="fn">run</span>(task);
+<span class="kw">const</span> score = <span class="kw">await</span> <span class="fn">evaluate</span>(result);
+<span class="kw">const</span> { estimate, status } = tracker.<span class="fn">update</span>(score);
+
+<span class="kw">if</span> (status === <span class="str">'degrading'</span>) <span class="fn">alertDegradation</span>(estimate);
+<span class="kw">if</span> (status === <span class="str">'noise'</span>) console.<span class="fn">log</span>(<span class="str">'单次异常，忽略'</span>);
+<span class="cm">// status === 'normal' → 继续，不过度反应</span></pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式</strong>
+      直接用原始评分驱动决策。agent 输出 3/10 → 立刻触发告警 → 重写 system prompt。但这可能只是一次难度特别高的任务带来的噪声，真实质量仍然是 7.8/10。过度响应噪声会导致系统不稳定。
+    </div>
+
+    <div class="quick-ref">
+      <h4>K 值选择指南</h4>
+      <ul>
+        <li>K = 0.1-0.2：评估成本高（每次人工打分），保守更新</li>
+        <li>K = 0.3-0.4：自动评估，中等信任度，推荐起点</li>
+        <li>K = 0.5-0.7：高频低成本评估，快速响应质量变化</li>
+        <li>K 不固定（动态卡尔曼）：初期高 K 快速学习，稳定后降低 K</li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>质量状态跟踪规则</span>
+      </div>
+<pre><span class="cm">## Agent 质量跟踪规则（卡尔曼滤波原则）
+
+### 用移动平均代替单次评分
+- 不用单次分数触发告警
+- 用最近 5 次的加权平均（近期权重更高）判断趋势
+
+### 区分噪声和真实退化
+- 单次分数偏离历史均值 >3 → 大概率是噪声，观察下一次
+- 连续 3 次低于历史均值 >1 → 真实退化，触发 I 项修正
+
+### 响应阈值（防止过度响应）
+- 不要因为一次差的输出修改 system prompt
+- 要因为"移动平均持续下降超过 1 分"才修改
+- 更新 system prompt 前，先判断是任务难度问题还是系统问题</span></pre>
+    </div>
+  </div>
+

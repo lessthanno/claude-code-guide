@@ -471,7 +471,7 @@
   <div class="page-header">
     <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#666;font-weight:600;margin-bottom:12px;">Vol.01 · 参考手册</div>
     <h1>Claude Code 开发心智模型手册</h1>
-    <p>8 个来自物理/数学/控制论/概率论的核心概念，映射到 Claude Code 真实开发场景。<br>每个概念包含：核心公式 → 识别信号 → 代码模式 → 错误用法 → CLAUDE.md 片段。</p>
+    <p>9 个来自物理/数学/控制论/概率论的核心概念，映射到 Claude Code 真实开发场景。<br>每个概念包含：核心公式 → 识别信号 → 代码模式 → 错误用法 → CLAUDE.md 片段。</p>
     <div class="meta-pills">
       <span class="pill">Claude Code</span>
       <span class="pill">Prompt Engineering</span>
@@ -1573,6 +1573,121 @@ E = 证据（实际观测到的输出）
     </div>
   </div>
 
+  <!-- ===== 09 卡尔曼滤波 ===== -->
+  <div class="concept" id="kalman">
+    <div class="concept-header">
+      <div class="concept-num">09</div>
+      <div class="concept-title-block">
+        <h2>卡尔曼滤波 · Kalman Filter</h2>
+        <div class="concept-subtitle">控制论 · 用于 Agent 真实质量状态估计</div>
+      </div>
+      <span class="domain-badge tag-ctrl">控制</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心公式</div>
+      <div class="formula">x̂ₙ = x̂ₙ₋₁ + K · (zₙ − x̂ₙ₋₁)
+
+x̂ₙ   = 当前估计的"真实质量"
+zₙ   = 本次实际观测值（单次评分）
+K    = 卡尔曼增益 = 信任观测 vs 信任预测的权重
+
+K 高（接近 1）→ 更信任新观测，估计变化快
+K 低（接近 0）→ 更信任历史，估计变化慢</div>
+      <div class="formula-note">关键直觉：单次评分不等于真实质量。真实质量 = 历史估计 × (1-K) + 当前观测 × K</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">区分噪声 vs 真实退化</div>
+      <table class="decision-table">
+        <tr><th>观测序列</th><th>原始判断</th><th>卡尔曼估计（K=0.3）</th></tr>
+        <tr>
+          <td>8, 8, 8, 4, 8, 8</td>
+          <td class="signal">看到 4 → 系统崩了</td>
+          <td class="action">x̂ = 7.9 → 4 是噪声，系统正常</td>
+        </tr>
+        <tr>
+          <td>8, 7, 6, 5, 4, 3</td>
+          <td class="signal">最新是 3，还好</td>
+          <td class="action">x̂ = 5.8 → 趋势恶化，需干预</td>
+        </tr>
+        <tr>
+          <td>4, 5, 4, 5, 4, 5</td>
+          <td class="signal">震荡，不知道咋办</td>
+          <td class="action">x̂ ≈ 4.5 → 系统性问题</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — Agent 质量状态跟踪</div>
+      <div class="code-header">
+        <span>quality-tracker.ts</span>
+        <span>Agent 监控层</span>
+      </div>
+<pre><span class="kw">class</span> <span class="var">KalmanQualityTracker</span> {
+  <span class="kw">private</span> estimate: <span class="kw">number</span>;
+  <span class="kw">private</span> uncertainty: <span class="kw">number</span>;
+  <span class="kw">private</span> processNoise: <span class="kw">number</span>;
+  <span class="kw">private</span> observationNoise: <span class="kw">number</span>;
+
+  <span class="kw">constructor</span>(initialEstimate = <span class="num">7</span>) {
+    <span class="kw">this</span>.estimate = initialEstimate;
+    <span class="kw">this</span>.uncertainty = <span class="num">1</span>;
+    <span class="kw">this</span>.processNoise = <span class="num">0.1</span>;
+    <span class="kw">this</span>.observationNoise = <span class="num">2</span>;
+  }
+
+  <span class="fn">update</span>(observed: <span class="kw">number</span>) {
+    <span class="kw">const</span> predictedUncertainty = <span class="kw">this</span>.uncertainty + <span class="kw">this</span>.processNoise;
+    <span class="kw">const</span> K = predictedUncertainty / (predictedUncertainty + <span class="kw">this</span>.observationNoise);
+
+    <span class="kw">const</span> prevEstimate = <span class="kw">this</span>.estimate;
+    <span class="kw">this</span>.estimate = <span class="kw">this</span>.estimate + K * (observed - <span class="kw">this</span>.estimate);
+    <span class="kw">this</span>.uncertainty = (<span class="num">1</span> - K) * predictedUncertainty;
+
+    <span class="kw">const</span> deviation = Math.<span class="fn">abs</span>(observed - prevEstimate);
+    <span class="kw">const</span> trend = <span class="kw">this</span>.estimate - prevEstimate;
+
+    <span class="kw">return</span> {
+      estimate: Math.<span class="fn">round</span>(<span class="kw">this</span>.estimate * <span class="num">10</span>) / <span class="num">10</span>,
+      kalmanGain: Math.<span class="fn">round</span>(K * <span class="num">100</span>) / <span class="num">100</span>,
+      status: deviation > <span class="num">3</span> && Math.<span class="fn">abs</span>(trend) < <span class="num">0.5</span> ? <span class="str">'noise'</span>
+            : trend < -<span class="num">0.3</span> ? <span class="str">'degrading'</span>
+            : <span class="str">'normal'</span>,
+    };
+  }
+}</pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式</strong>
+      直接用原始评分驱动决策。agent 输出 3/10 → 立刻触发告警 → 重写 system prompt。但这可能只是一次难度特别高的任务带来的噪声，真实质量仍然是 7.8/10。过度响应噪声会导致系统不稳定。
+    </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>质量状态跟踪规则</span>
+      </div>
+<pre><span class="cm">## Agent 质量跟踪规则（卡尔曼滤波原则）
+
+### 用移动平均代替单次评分
+- 不用单次分数触发告警
+- 用最近 5 次的加权平均（近期权重更高）判断趋势
+
+### 区分噪声和真实退化
+- 单次分数偏离历史均值 >3 → 大概率是噪声，观察下一次
+- 连续 3 次低于历史均值 >1 → 真实退化，触发 I 项修正
+
+### 响应阈值（防止过度响应）
+- 不要因为一次差的输出修改 system prompt
+- 要因为"移动平均持续下降超过 1 分"才修改
+- 更新 system prompt 前，先判断是任务难度问题还是系统问题</span></pre>
+    </div>
+  </div>
+
   <!-- ===== 信号表 ===== -->
   <div class="concept" id="signals">
     <div class="concept-header">
@@ -1624,6 +1739,11 @@ E = 证据（实际观测到的输出）
         <td>试了一次失败，觉得 Claude 做不到这件事</td>
         <td class="signal">贝叶斯更新</td>
         <td class="action">单次失败只更新先验 -15%，再测 3 次</td>
+      </tr>
+      <tr>
+        <td>单次低分不知道是偶发还是系统质量下降</td>
+        <td class="signal">卡尔曼滤波</td>
+        <td class="action">看移动平均趋势，而不是单次评分</td>
       </tr>
     </table>
   </div>
@@ -1679,6 +1799,11 @@ E = 证据（实际观测到的输出）
         <td>"Claude 失败了一次，这个任务它做不到"</td>
         <td>点估计，单次定论</td>
         <td class="action">贝叶斯更新，3-5 次测试再决策</td>
+      </tr>
+      <tr>
+        <td>"这次输出 3/10，立刻重写 system prompt"</td>
+        <td>把噪声当趋势，过度响应</td>
+        <td class="action">卡尔曼滤波，看移动平均而非单次分数</td>
       </tr>
     </table>
   </div>
