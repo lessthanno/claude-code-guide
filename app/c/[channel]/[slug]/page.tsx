@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Sidebar from '@/components/Sidebar'
+import { MobileMenuButton } from '@/components/MobileDrawer'
 import { getPost, getChannelPosts, CHANNEL_META, Channel } from '@/lib/content'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
@@ -50,6 +51,7 @@ export default async function PostPage({
       <div className="layout-body">
         {/* Top bar */}
         <header className="layout-header" style={{ gap: '8px', justifyContent: 'flex-start' }}>
+          <MobileMenuButton />
           <Link href={`/c/${ch}`} style={{ color: 'var(--text3)', textDecoration: 'none', fontSize: '13px' }}>
             {meta.emoji} {meta.label}
           </Link>

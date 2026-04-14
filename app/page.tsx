@@ -1,6 +1,7 @@
 import { getAllPosts, CHANNEL_META, Channel } from '@/lib/content'
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
+import { MobileMenuButton } from '@/components/MobileDrawer'
 import { u } from '@/lib/url'
 
 const CHANNELS = ['daily', 'mental-models', 'templates', 'community'] as Channel[]
@@ -30,6 +31,7 @@ export default function Home() {
       <div className="layout-body">
         <header className="layout-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <MobileMenuButton />
             <span style={{ fontSize: '16px' }}>⚡</span>
             <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)' }}>动态 Feed</span>
           </div>

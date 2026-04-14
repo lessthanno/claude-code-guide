@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import Link from 'next/link'
 import Sidebar from '@/components/Sidebar'
+import { MobileMenuButton } from '@/components/MobileDrawer'
 
 const CHAPTERS = [
   { id: 'sa',        num: '01', name: '模拟退火',   domain: 'Prompt 调优',      tag: 'tag-phys', label: '物理' },
@@ -29,6 +30,7 @@ export default function HandbookPage() {
 
       <div className="layout-body">
         <header className="layout-header" style={{ gap: '8px', justifyContent: 'flex-start' }}>
+          <MobileMenuButton />
           <span style={{ fontSize: '13px', color: 'var(--text3)' }}>📖 参考手册</span>
           <span style={{ color: 'var(--border2)', fontSize: '13px' }}>/</span>
           <span style={{ fontSize: '13px', color: 'var(--text2)' }}>Claude Code 开发心智模型手册</span>

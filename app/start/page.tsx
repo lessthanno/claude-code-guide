@@ -1,5 +1,6 @@
 import Sidebar from '@/components/Sidebar'
 import Link from 'next/link'
+import { MobileMenuButton } from '@/components/MobileDrawer'
 
 const STEPS = [
   {
@@ -41,6 +42,7 @@ export default function StartPage() {
       <div className="layout-body">
         <header className="layout-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <MobileMenuButton />
             <span style={{ fontSize: '16px' }}>📌</span>
             <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)' }}>快速开始</span>
           </div>

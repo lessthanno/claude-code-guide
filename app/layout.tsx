@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import MobileNav from '@/components/MobileNav'
 
 export const metadata: Metadata = {
   title: '知识积累 · 工程师社群',
@@ -11,6 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="zh">
       <body style={{ margin: 0, minHeight: '100vh', background: 'var(--bg)' }}>
         {children}
+        <MobileNav />
       </body>
     </html>
   )

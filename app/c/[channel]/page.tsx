@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
+import { MobileMenuButton } from '@/components/MobileDrawer'
 import { getChannelPosts, CHANNEL_META, Channel } from '@/lib/content'
 
 const VALID_CHANNELS: Channel[] = ['daily', 'mental-models', 'templates', 'community']
@@ -24,6 +25,7 @@ export default async function ChannelPage({ params }: { params: Promise<{ channe
       <div className="layout-body">
         <header className="layout-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <MobileMenuButton />
             <span style={{ fontSize: '18px' }}>{meta.emoji}</span>
             <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)' }}>{meta.label}</span>
             <span style={{

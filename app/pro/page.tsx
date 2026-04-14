@@ -1,5 +1,6 @@
 import Sidebar from '@/components/Sidebar'
 import { u } from '@/lib/url'
+import { MobileMenuButton } from '@/components/MobileDrawer'
 
 const PLANS = [
   {
@@ -36,6 +37,7 @@ export default function ProPage() {
       <div className="layout-body">
         <header className="layout-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <MobileMenuButton />
             <span style={{ fontSize: '16px' }}>⭐️</span>
             <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)' }}>Pro 会员</span>
           </div>
