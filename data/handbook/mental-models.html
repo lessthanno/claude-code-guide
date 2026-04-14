@@ -471,7 +471,7 @@
   <div class="page-header">
     <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#666;font-weight:600;margin-bottom:12px;">Vol.01 · 参考手册</div>
     <h1>Claude Code 开发心智模型手册</h1>
-    <p>7 个来自物理/数学/控制论的核心概念，映射到 Claude Code 真实开发场景。<br>每个概念包含：核心公式 → 识别信号 → 代码模式 → 错误用法。</p>
+    <p>8 个来自物理/数学/控制论/概率论的核心概念，映射到 Claude Code 真实开发场景。<br>每个概念包含：核心公式 → 识别信号 → 代码模式 → 错误用法 → CLAUDE.md 片段。</p>
     <div class="meta-pills">
       <span class="pill">Claude Code</span>
       <span class="pill">Prompt Engineering</span>
@@ -1620,6 +1620,11 @@ E = 证据（实际观测到的输出）
         <td class="signal">帕累托前沿</td>
         <td class="action">先定优先级，不存在全部最优</td>
       </tr>
+      <tr>
+        <td>试了一次失败，觉得 Claude 做不到这件事</td>
+        <td class="signal">贝叶斯更新</td>
+        <td class="action">单次失败只更新先验 -15%，再测 3 次</td>
+      </tr>
     </table>
   </div>
 
@@ -1669,6 +1674,11 @@ E = 证据（实际观测到的输出）
         <td>"调了两天，这个 prompt 已经最优了"</td>
         <td>局部最优，没有退火</td>
         <td class="action">换结构探索，接受暂时退步</td>
+      </tr>
+      <tr>
+        <td>"Claude 失败了一次，这个任务它做不到"</td>
+        <td>点估计，单次定论</td>
+        <td class="action">贝叶斯更新，3-5 次测试再决策</td>
       </tr>
     </table>
   </div>
