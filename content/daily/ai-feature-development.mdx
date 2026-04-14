@@ -1,0 +1,126 @@
+---
+title: "在产品里加入 AI 功能：从 POC 到生产的完整路径"
+date: "2026-05-06"
+tags: ["claude-code", "ai-features", "product-development", "sdk", "workflow"]
+pro: true
+---
+
+"在我们的产品里加一个 AI 功能"——这句话背后有很多坑。以下是一个从 POC 到生产的系统路径，避开大多数团队踩过的坑。
+
+**第一步：POC 验证（1-2 天）**
+
+在写任何代码之前，先验证 AI 能不能解决你的问题：
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+
+# 最简单的 POC：直接测试核心场景
+def test_core_use_case(user_input: str) -> str:
+    response = client.messages.create(
+        model="claude-sonnet-4-5",
+        max_tokens=1024,
+        system="你是一个客服助手，帮助用户解决账单问题。",
+        messages=[{"role": "user", "content": user_input}]
+    )
+    return response.content[0].text
+
+# 用真实的 20 个用户问题测试
+test_cases = load_real_user_questions()
+for q in test_cases:
+    print(f"Q: {q}")
+    print(f"A: {test_core_use_case(q)}")
+    print("---")
+```
+
+**第二步：定义成功指标**
+
+在做任何优化之前，先定义"什么是好的结果"：
+
+```bash
+claude "帮我设计这个 AI 功能的评估框架：
+功能：自动回复客户账单查询
+
+需要评估：
+1. 准确性（回答是否正确）
+2. 完整性（是否回答了问题的所有部分）
+3. 安全性（是否有不该说的内容）
+4. 延迟（用户等待时间）
+
+如何量化这些指标？如何建立测试集？"
+```
+
+**第三步：生产化关键问题**
+
+```bash
+claude "我有一个可以工作的 AI 功能原型。
+列出在生产化时需要处理的所有工程问题：
+1. 延迟（API 调用时间如何处理？）
+2. 成本（每次调用成本，如何优化？）
+3. 错误处理（API 失败时怎么降级？）
+4. 内容安全（如何过滤不安全输出？）
+5. 监控（如何知道功能是否正常工作？）
+6. 用户体验（流式输出 vs 等待结果？）"
+```
+
+**流式输出的实现：**
+
+```python
+# 用户等待体验：流式 vs 等待
+def stream_response(prompt: str):
+    with client.messages.stream(
+        model="claude-sonnet-4-5",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": prompt}]
+    ) as stream:
+        for text in stream.text_stream:
+            yield text  # 实时传给前端
+
+# Next.js API Route
+async function POST(request: Request) {
+  const encoder = new TextEncoder()
+  const stream = new ReadableStream({
+    async start(controller) {
+      for await (const chunk of pythonStream) {
+        controller.enqueue(encoder.encode(chunk))
+      }
+      controller.close()
+    }
+  })
+  return new Response(stream)
+}
+```
+
+**降级策略：**
+
+```python
+def get_ai_response(query: str) -> str:
+    try:
+        return call_claude_api(query)
+    except anthropic.APITimeoutError:
+        # 超时：返回标准回复
+        return get_fallback_response(query)
+    except anthropic.RateLimitError:
+        # 限流：排队处理
+        queue_for_later(query)
+        return "正在处理中，稍后回复..."
+    except Exception as e:
+        # 其他错误：记录并降级
+        log_error(e)
+        return get_human_escalation_message()
+```
+
+**成本控制：**
+
+```bash
+claude "我们的 AI 功能每天处理 10000 个请求，
+当前方案：每次直接调用 claude-sonnet-4-5。
+帮我分析成本优化方案：
+1. 哪些请求可以用 Haiku 处理（成本低 10 倍）？
+2. 哪些响应可以缓存（相同/相似的查询）？
+3. Prompt Caching 能节省多少（system prompt 重复）？
+4. 批处理能节省多少（异步任务）？"
+```
+
+把 AI 功能做进生产，技术复杂度通常不是瓶颈——评估体系、监控告警、降级策略才是。没有这些，你不知道功能是否在正常工作。
