@@ -1,0 +1,117 @@
+---
+title: "Vitest + Testing Library：现代前端测试与 Claude Code"
+date: "2026-05-18"
+tags: ["claude-code", "vitest", "testing", "react", "frontend-testing"]
+pro: false
+---
+
+前端测试有两个极端：要么过度依赖手动测试（"我看着没问题"），要么写大量测试但都只测实现细节（改了变量名，100 个测试挂掉）。Claude Code 帮你找到中间地带：测试行为，不测实现。
+
+**测试金字塔的前端版本：**
+
+```bash
+claude "帮我设计这个 React 应用的测试策略：
+
+应用：任务管理 SPA
+主要功能：创建/编辑/删除任务、拖拽排序、过滤/搜索
+
+测试金字塔：
+1. 单元测试（最多）：哪些适合单元测试？
+2. 组件测试（中等）：哪些组件应该有独立测试？
+3. E2E 测试（最少）：哪些关键路径必须 E2E 覆盖？
+
+给出每层的典型测试用例，说明选择的理由。"
+```
+
+**组件行为测试（Testing Library 方式）：**
+
+```bash
+claude "帮我写这个搜索框组件的 Vitest 测试：
+
+组件行为：
+- 输入时，300ms 防抖后调用 onSearch
+- 清空按钮在有内容时才出现
+- 按 Escape 键清空内容
+- loading 状态时禁用输入
+
+测试原则：
+- 用户行为驱动（用 userEvent 而不是 fireEvent）
+- 通过 accessible name 查找元素，不用 className 或 id
+- 不测内部实现（不测 debounce 的内部 timer）
+
+给出完整测试文件，用 @testing-library/react + vitest。"
+```
+
+**异步测试：**
+
+```bash
+claude "帮我写这个数据获取组件的异步测试：
+
+组件行为：
+1. 初始渲染：显示 loading
+2. 请求成功：显示数据列表
+3. 请求失败：显示错误信息 + 重试按钮
+4. 点击重试：重新发请求
+
+测试挑战：
+- 如何 mock fetch（msw vs jest.mock）？
+- 如何等待异步操作（waitFor vs findBy）？
+- 如何测试竞态条件（快速连续触发）？
+
+给出推荐方案 + 完整测试代码。"
+```
+
+**自定义 Hook 的测试：**
+
+```bash
+claude "帮我测试这个 useLocalStorage hook：
+
+interface useLocalStorage<T> {
+  (key: string, initialValue: T): [T, (value: T) => void, () => void]
+}
+// 返回：[当前值, 设置函数, 删除函数]
+
+测试覆盖：
+1. 初始值（localStorage 为空时使用 initialValue）
+2. 从 localStorage 读取已存值
+3. 设置值（localStorage 和状态同步）
+4. 删除值
+5. storage 事件（其他 tab 修改时同步）
+6. JSON 序列化错误处理
+
+使用 renderHook 和模拟的 localStorage（避免真实 localStorage 的测试污染）。"
+```
+
+**快照测试的正确用法：**
+
+```bash
+claude "我们有大量快照测试，每次改 UI 都要更新几十个快照，维护成本很高。
+
+帮我评估：
+1. 什么时候快照测试是合适的？
+2. 什么时候不应该用快照测试？
+3. 如何让快照测试更有价值（内联快照 vs 文件快照）？
+4. 替代方案：视觉回归测试（Playwright screenshot）vs 行为测试
+
+给出我们现有快照测试的重构建议：哪些应该改成行为测试？"
+```
+
+**CI 集成：测试报告和覆盖率：**
+
+```bash
+claude "帮我配置 Vitest + GitHub Actions：
+
+需求：
+1. PR 时自动运行测试
+2. 测试结果显示在 PR 页面（不只是 pass/fail，要显示具体哪些测试挂了）
+3. 覆盖率报告（分支覆盖率目标 70%）
+4. 测试时间 < 60 秒（目前有 200 个测试跑了 3 分钟）
+
+给出：
+- Vitest 配置（vitest.config.ts）
+- GitHub Actions workflow
+- 如何用 worker threads 并行跑测试
+- 哪些类型的测试可以用 mock 加速？"
+```
+
+前端测试的核心原则：**测试要能告诉你用户的体验是否正确，而不是代码的实现是否正确**。一个不需要改的测试，是对产品行为的文档；一个经常需要改的测试，通常是在测实现细节。Claude Code 帮你从"测什么"的问题开始，而不是"怎么写"。

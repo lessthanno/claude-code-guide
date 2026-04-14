@@ -1,0 +1,149 @@
+---
+title: "AI 产品开发的工程实践：从 demo 到 production"
+date: "2026-05-19"
+tags: ["claude-code", "ai-product", "llm", "production", "engineering"]
+pro: true
+---
+
+很多 AI 产品在 demo 阶段表现惊艳，但在生产环境里问题频出。这不是模型的问题，而是**工程化不足**的问题。Claude Code 帮你系统性地从 demo 到 production。
+
+**Demo 到 Production 的核心差距：**
+
+| Demo 状态 | Production 要求 |
+|----------|----------------|
+| 单次对话测试 | 高并发、大流量、用户行为多样 |
+| 手动测试"感觉不错" | 自动化评估、量化指标 |
+| 直接用 API | 超时、限流、降级、成本控制 |
+| 硬编码 prompt | Prompt 版本管理、A/B 测试 |
+| 无状态对话 | 多轮上下文管理、session 隔离 |
+
+**Prompt 版本管理：**
+
+```python
+# 不这样做（hardcode prompt）
+def analyze_code(code: str) -> str:
+    response = claude.messages.create(
+        messages=[{"role": "user", "content": f"Review this code: {code}"}]
+    )
+    return response.content[0].text
+
+# 这样做（版本化的 prompt 模板）
+PROMPT_REGISTRY = {
+    "code_review_v1": load_prompt("prompts/code_review_v1.txt"),
+    "code_review_v2": load_prompt("prompts/code_review_v2.txt"),  # 当前版本
+}
+
+def analyze_code(code: str, prompt_version: str = "code_review_v2") -> str:
+    template = PROMPT_REGISTRY[prompt_version]
+    response = claude.messages.create(
+        messages=[{"role": "user", "content": template.format(code=code)}]
+    )
+    return response.content[0].text
+```
+
+**成本控制和 Token 预算：**
+
+```python
+# 实现 token budget 上限
+def call_claude_with_budget(
+    prompt: str,
+    max_tokens: int = 1000,
+    max_input_tokens: int = 8000,
+) -> str:
+    # 估算 input tokens（粗略：4 chars ≈ 1 token）
+    estimated_input = len(prompt) // 4
+    if estimated_input > max_input_tokens:
+        # 截断而不是拒绝
+        prompt = truncate_to_tokens(prompt, max_input_tokens)
+        logger.warning(f"Prompt truncated from {estimated_input} to {max_input_tokens} tokens")
+    
+    response = claude.messages.create(
+        model="claude-haiku-4-5-20251001",  # 成本敏感场景用 Haiku
+        max_tokens=max_tokens,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    
+    # 记录实际成本
+    metrics.increment("claude.api.input_tokens", response.usage.input_tokens)
+    metrics.increment("claude.api.output_tokens", response.usage.output_tokens)
+    
+    return response.content[0].text
+```
+
+**模型路由（根据复杂度选模型）：**
+
+```python
+from enum import Enum
+
+class TaskComplexity(Enum):
+    SIMPLE = "simple"   # Haiku：分类、提取、简单问答
+    MEDIUM = "medium"   # Sonnet：代码 review、摘要、分析
+    COMPLEX = "complex" # Opus：复杂推理、长文档分析、创作
+
+MODEL_MAP = {
+    TaskComplexity.SIMPLE: "claude-haiku-4-5-20251001",
+    TaskComplexity.MEDIUM: "claude-sonnet-4-6",
+    TaskComplexity.COMPLEX: "claude-opus-4-6",
+}
+
+def route_to_model(task: Task) -> str:
+    complexity = classify_task_complexity(task)
+    return MODEL_MAP[complexity]
+```
+
+**流式输出的生产化：**
+
+```python
+# 生产级的流式输出处理
+async def stream_response(prompt: str) -> AsyncGenerator[str, None]:
+    try:
+        async with claude.messages.stream(
+            model="claude-sonnet-4-6",
+            max_tokens=2000,
+            messages=[{"role": "user", "content": prompt}]
+        ) as stream:
+            async for text in stream.text_stream:
+                yield text
+    except anthropic.APITimeoutError:
+        yield "[请求超时，请稍后重试]"
+    except anthropic.RateLimitError:
+        yield "[当前请求量过大，请稍后重试]"
+    except Exception as e:
+        logger.error(f"Stream error: {e}")
+        yield "[出现错误，请刷新重试]"
+```
+
+**多租户的 Prompt 隔离：**
+
+```bash
+claude "我的 AI 功能需要服务多个企业客户，每个客户有不同的：
+1. 系统 prompt（业务规则）
+2. 用户角色（不同职位看不同内容）
+3. 数据访问权限（只能看自己公司的数据）
+
+帮我设计 prompt 构建系统：
+1. 如何组装系统 prompt（公共规则 + 客户规则 + 用户权限）
+2. 如何防止 prompt injection（客户数据注入修改行为）
+3. 如何审计每个客户的使用情况（成本、调用量）
+4. 如何 A/B 测试不同客户的 prompt 变体"
+```
+
+**AI 功能的降级策略：**
+
+```python
+class AIFeatureWithFallback:
+    def analyze(self, text: str) -> AnalysisResult:
+        try:
+            # 主路径：AI 分析
+            return self._ai_analyze(text)
+        except anthropic.APIError as e:
+            if e.status_code == 429:  # Rate limit
+                # 降级 1：用缓存的相似结果
+                cached = self._find_similar_cached(text)
+                if cached:
+                    return cached
+            # 降级 2：规则引擎（覆盖简单情况）
+            return self._rule_based_analyze(text)
+```
+
+AI 产品的生产化核心：**把 AI 当成一个不可靠的外部服务来对待**——有延迟、有错误、有成本。工程化的目标是在这个不可靠的基础上，构建可靠的用户体验。
