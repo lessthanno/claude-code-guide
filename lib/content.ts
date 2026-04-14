@@ -25,6 +25,64 @@ const CONTENT_DIR = path.join(process.cwd(), 'content')
 
 const CHANNELS: Channel[] = ['daily', 'mental-models', 'templates', 'community']
 
+// 基础 Markdown → HTML 转换（仅用于纯 Markdown 内容）
+function markdownToHtml(md: string): string {
+  // 如果内容已经包含 HTML 标签，直接返回（mental-models 等文章已是 HTML）
+  if (/<[a-z][^>]*>/i.test(md.trim())) return md
+
+  // 1. 提取并暂存代码块，防止内部内容被误处理
+  const codeBlocks: string[] = []
+  let processed = md.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    const escaped = code.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const html = `<pre><code${lang ? ` class="language-${lang}"` : ''}>${escaped}</code></pre>`
+    codeBlocks.push(html)
+    return `\x00CODE${codeBlocks.length - 1}\x00`
+  })
+
+  // 2. 行内格式
+  processed = processed
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+
+  // 3. 按段落（双换行）分割处理
+  const paragraphs = processed.split(/\n\n+/).map(block => {
+    block = block.trim()
+    if (!block) return ''
+
+    // 已是 HTML 占位符（代码块）
+    if (block.includes('\x00CODE')) return block
+
+    // 标题
+    if (/^#{1,3} /.test(block)) {
+      return block
+        .replace(/^### (.+)$/m, '<h3>$1</h3>')
+        .replace(/^## (.+)$/m, '<h2>$1</h2>')
+        .replace(/^# (.+)$/m, '<h1>$1</h1>')
+    }
+
+    // 列表
+    if (/^- /.test(block)) {
+      const items = block.split('\n')
+        .filter(l => l.trim())
+        .map(l => `<li>${l.replace(/^- /, '').trim()}</li>`)
+        .join('')
+      return `<ul>${items}</ul>`
+    }
+
+    // 普通段落（多行合并）
+    return `<p>${block.replace(/\n/g, ' ')}</p>`
+  })
+
+  processed = paragraphs.join('\n')
+
+  // 4. 还原代码块
+  codeBlocks.forEach((html, i) => {
+    processed = processed.replace(`\x00CODE${i}\x00`, html)
+  })
+
+  return processed
+}
+
 export function getChannelPosts(channel: Channel): Post[] {
   const dir = path.join(CONTENT_DIR, channel)
   if (!fs.existsSync(dir)) return []
@@ -35,6 +93,7 @@ export function getChannelPosts(channel: Channel): Post[] {
       const slug = file.replace(/\.(mdx|md)$/, '')
       const raw = fs.readFileSync(path.join(dir, file), 'utf8')
       const { data, content } = matter(raw)
+      const html = markdownToHtml(content)
       return {
         slug,
         channel,
@@ -46,8 +105,8 @@ export function getChannelPosts(channel: Channel): Post[] {
         num: data.num,
         titleEn: data.titleEn,
         domain: data.domain,
-        content,
-        excerpt: content.replace(/<[^>]+>/g, '').slice(0, 120).trim() + '...',
+        content: html,
+        excerpt: content.replace(/<[^>]+>/g, '').replace(/```[\s\S]*?```/g, '').replace(/[*`#-]/g, '').slice(0, 120).trim() + '...',
       } as Post
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
