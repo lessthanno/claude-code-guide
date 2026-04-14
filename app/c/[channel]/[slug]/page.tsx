@@ -234,9 +234,9 @@ export default async function PostPage({
           {/* TOC sidebar */}
           <aside className="article-toc">
             <div style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text3)', marginBottom: '12px' }}>
-              本频道其他内容
+              本频道其他内容 <span style={{ fontFamily: 'var(--mono)' }}>({posts.length})</span>
             </div>
-            {posts.slice(0, 8).map(p => (
+            {posts.slice(0, 12).map(p => (
               <Link key={p.slug} href={`/c/${ch}/${p.slug}`} style={{
                 display: 'block',
                 padding: '6px 0',
@@ -253,6 +253,16 @@ export default async function PostPage({
                 {p.title.split(' · ')[0]}
               </Link>
             ))}
+            {posts.length > 12 && (
+              <Link href={`/c/${ch}`} style={{
+                display: 'block',
+                padding: '8px 0',
+                fontSize: '11px',
+                color: 'var(--text3)',
+                textDecoration: 'none',
+                opacity: 0.7,
+              }}>查看全部 {posts.length} 篇 →</Link>
+            )}
           </aside>
         </div>
       </div>

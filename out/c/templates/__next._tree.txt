@@ -1,2 +1,0 @@
-:HL["/claude-code-guide/_next/static/chunks/0olh04qo4q38_.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"c","param":null,"prefetchHints":0,"slots":{"children":{"name":"channel","param":{"type":"d","key":"templates","siblings":null},"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}}}},"staleTime":300,"buildId":"XdoT_a2sWjwkXWHT6oVz4"}
