@@ -1,0 +1,125 @@
+---
+title: "React 开发模式：用 Claude Code 解决真实的前端挑战"
+date: "2026-05-17"
+tags: ["claude-code", "react", "frontend", "hooks", "state-management"]
+pro: false
+---
+
+React 的真实难点不是组件语法，而是**状态设计、性能边界、和副作用的正确处理**。Claude Code 在这里的价值是帮你在写代码之前把设计决策想清楚。
+
+**自定义 Hook 设计：**
+
+```bash
+claude "帮我设计这个自定义 Hook：
+
+需求：usePagination
+- 管理分页状态（page, pageSize, total）
+- 支持 URL 同步（?page=2&size=20）
+- 预加载下一页（页面加载好后提前 fetch 下一页）
+- 切换 pageSize 时重置到第一页
+
+接口要求：
+const { page, pageSize, total, setPage, setPageSize, setTotal } = usePagination({
+  defaultPageSize: 20,
+  syncUrl: true,
+})
+
+先给我接口设计和类型定义，再给实现。"
+```
+
+**性能优化：**
+
+```bash
+claude "这个列表组件在数据变化时整体重渲染，导致卡顿：
+[组件代码]
+
+诊断：
+1. 哪些组件没有必要重渲染（用 React DevTools Profiler 怎么验证）？
+2. 哪些 props 导致子组件重渲染（引用比较问题）？
+3. 什么时候用 memo，什么时候用 useMemo，什么时候用 useCallback？
+4. Context 的性能问题：如果 Context 值变了，所有消费者都重渲染怎么办？
+
+给出具体的优化方案，不要'能 memo 就 memo'这种建议。"
+```
+
+**表单状态管理：**
+
+```bash
+claude "帮我选择这个复杂表单的状态管理方案：
+
+表单特点：
+- 50+ 个字段（分 5 个步骤）
+- 字段间有复杂的联动（选了 A 才显示 B）
+- 需要跨步骤的验证（步骤 3 的值影响步骤 1 的验证）
+- 支持草稿保存（用户关闭浏览器后能恢复）
+- 提交时需要转换数据格式
+
+选项对比：
+1. useState + useReducer
+2. react-hook-form
+3. Zustand store
+
+每种方案的具体实现复杂度？哪个最适合这个场景？"
+```
+
+**数据获取模式：**
+
+```bash
+claude "帮我实现一个健壮的数据获取 Hook：
+
+需求：useQuery（不用 SWR/React Query，手动实现以便学习）
+
+功能：
+1. loading / error / data 状态
+2. 依赖变化时重新请求（类似 useEffect 的 deps）
+3. 组件卸载时取消请求（AbortController）
+4. 竞态处理（快速切换时，旧请求结果不覆盖新结果）
+5. 重试（失败最多 3 次，指数退避）
+
+给出完整实现 + 单元测试思路。"
+```
+
+**状态机模式：**
+
+```bash
+claude "这个上传组件的状态很混乱，多个 boolean flag 导致了矛盾状态：
+
+interface UploadState {
+  isUploading: boolean
+  isProcessing: boolean
+  hasError: boolean
+  isSuccess: boolean
+  isDragging: boolean
+  progress: number
+}
+// 问题：isUploading + hasError = true 同时出现了
+
+帮我用 useReducer + 状态机重构，定义合法状态和转换：
+- idle → dragging → uploading → processing → success/error
+- 每个状态有哪些合法的 action？
+- 错误状态如何重置回 idle？
+
+给出完整的 useReducer 实现。"
+```
+
+**错误边界和降级 UI：**
+
+```bash
+claude "帮我给这个应用设计错误边界策略：
+
+应用结构：
+- 顶层：导航 + 主内容区
+- 主内容：左侧列表 + 右侧详情
+- 右侧详情有 5 个标签页（基本信息、统计、评论、历史、设置）
+
+错误边界设计：
+1. 粒度如何选择？（不是越细越好）
+2. 哪些错误应该向上冒泡（让更高层的边界处理）？
+3. 降级 UI 的设计（显示什么，提供什么操作）？
+4. 如何让用户从错误状态恢复？
+5. 错误上报（Sentry）在哪里接入？
+
+给出具体的 ErrorBoundary 组件代码 + 使用策略。"
+```
+
+React 开发的 Claude Code 核心用法：把 React 当成一个复杂的状态管理问题，不只是 UI 渲染问题。**先和 Claude 讨论状态设计，再写代码**——这个顺序比直接写代码再重构，省的时间多得多。

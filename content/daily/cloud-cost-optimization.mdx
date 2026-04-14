@@ -1,0 +1,107 @@
+---
+title: "云成本优化：用 Claude Code 把 AWS 账单砍掉一半"
+date: "2026-05-18"
+tags: ["claude-code", "aws", "cloud-cost", "optimization", "devops"]
+pro: false
+---
+
+云成本是大多数初创公司在 PMF 之前就能显著降低的成本。不是靠不用云，而是靠**用对规格和合理的架构**。Claude Code 帮你系统性地分析和优化。
+
+**账单分析：**
+
+```bash
+claude "帮我分析 AWS 账单，找出优化机会。
+
+这是上个月的主要费用（Cost Explorer 数据）：
+- EC2: $2,340（主要是 c5.2xlarge × 3）
+- RDS: $890（db.r5.large Multi-AZ）
+- CloudFront: $210
+- S3: $145
+- NAT Gateway: $320
+- Data Transfer: $180
+
+我们的负载：
+- 峰值 QPS：约 200
+- 平均 QPS：约 50
+- 用户主要在亚洲
+
+对每个费用项：
+1. 这个规格是否合理？
+2. 有哪些具体的降低成本方案？
+3. 风险评估（降低配置对可用性的影响）"
+```
+
+**EC2 实例优化：**
+
+```bash
+claude "我们有 3 台 c5.2xlarge（按需付费），实际 CPU 使用率平均 15%，峰值 45%。
+
+分析降低成本的方案：
+1. 降低实例类型（哪个更合适？）
+2. 改用 Savings Plans 或 Reserved Instances
+3. 用 Auto Scaling 替代固定数量（可以降到什么水平？）
+4. 使用 Spot 实例（适合这个场景吗？有什么风险？）
+
+给出每个方案的月成本估算和实施风险。"
+```
+
+**RDS 优化：**
+
+```bash
+claude "我们的 RDS PostgreSQL 配置：
+- db.r5.large（2 vCPU，16 GB RAM）
+- Multi-AZ 部署
+- 平均连接数：约 15
+- 峰值连接数：约 60
+- 存储：200 GB（实际使用 45 GB）
+
+问题：
+1. 实例大小是否超配？（基准：CPU < 20%，内存 < 50%）
+2. Multi-AZ 对我们是否必要？（我们有每小时备份）
+3. 存储是否应该缩减？（RDS 存储只能扩不能缩，但...）
+4. 连接池是否能减少数据库负载？
+
+给出每个问题的具体数据支撑和建议。"
+```
+
+**NAT Gateway 费用（常被忽略的大头）：**
+
+```bash
+claude "我们的 NAT Gateway 费用 $320/月，比预期高很多。
+
+NAT Gateway 的收费方式：
+- 每小时存在费用：~$32/月（正常）
+- 数据处理费：每 GB $0.045
+- 结论：数据处理费高，说明有大量内网→外网流量
+
+分析可能的原因和解决方案：
+1. EC2 拉取 Docker 镜像（应该用 ECR + VPC Endpoint）
+2. 日志发送到 CloudWatch（应该用 VPC Endpoint）
+3. S3 访问（应该用 S3 Gateway Endpoint，免费）
+4. 第三方 API 调用（无法避免，但要评估量级）
+
+给出 VPC Endpoint 的配置清单，估算可以节省多少。"
+```
+
+**系统架构层面的成本优化：**
+
+```bash
+claude "更根本地，帮我评估我们的架构是否有结构性的成本问题：
+
+当前架构：
+- 3 台 EC2 跑后端 API
+- 1 台 EC2 跑定时任务
+- RDS Multi-AZ
+- ElasticCache Redis
+- S3 + CloudFront
+
+每月 ~$4,000
+
+问题：
+1. 定时任务用 Lambda + EventBridge 更合适吗？
+2. 用 ECS Fargate 替代 EC2 能降低 ops 成本（不是价格）吗？
+3. ElastiCache 是否可以用 DynamoDB TTL 替代（看我们的访问模式）？
+4. 这个体量的初创公司，用 Railway/Render 而不是 AWS，成本如何？"
+```
+
+云成本优化的优先级：**先看 NAT Gateway、RDS 和 EC2 规格，这三项通常占 80% 的成本**。架构层面的优化是长期的，但配置调整可以立竿见影。每次优化前，先问"我有数据支持这个决策吗"——凭感觉缩容导致的故障，代价比节省的钱高出一个数量级。
