@@ -1,0 +1,87 @@
+---
+title: "用 Claude Code 写 ADR：把技术决策变成团队资产"
+date: "2026-05-10"
+tags: ["claude-code", "adr", "documentation", "decision-making", "team"]
+pro: false
+---
+
+ADR（Architecture Decision Record）是软件工程里最被低估的实践之一。6 个月后回头看"为什么当时选了 Redis 而不是 Memcached"，没有记录的团队只能靠猜。
+
+**Claude Code 让写 ADR 从"麻烦"变成"10 分钟的事"：**
+
+**触发写 ADR 的时机：**
+
+```bash
+# 在做技术决策时，先用 Claude 帮你想清楚
+claude "我们需要决定用 gRPC 还是 REST 作为服务间通信。
+帮我分析这个决策：
+1. 各方案的优势和劣势
+2. 在我们的场景（Go 服务 + Python 客户端）里的具体影响
+3. 这个决策的可逆性（以后改有多难）
+4. 推荐的方案和理由"
+```
+
+**生成 ADR 草稿：**
+
+```bash
+claude "基于上面的分析，
+按 ADR 格式（Michael Nygard 格式）写一份决策记录：
+
+决策：选择 REST 而不是 gRPC 作为初期服务间通信协议
+背景：[我们讨论的内容]
+
+包含：
+- Status: Accepted
+- Context（为什么需要做这个决策）
+- Decision（我们决定了什么）
+- Consequences（这个决策带来的影响，包括负面的）
+
+文件名：ADR-0001-service-communication-protocol.md"
+```
+
+**记录被否决的方案：**
+
+```bash
+claude "在 ADR 里加一个'Alternatives Considered'部分，
+记录我们考虑过但没有选择的方案（gRPC、Kafka）：
+- 为什么它们理论上更好
+- 为什么我们没有选
+- 什么情况下应该重新评估"
+```
+
+**ADR 的检索和引用：**
+
+```bash
+# 新工程师加入，想了解过去的决策
+claude "扫描 docs/decisions/ 目录，
+回答：'为什么数据库选了 PostgreSQL 而不是 MySQL？'
+如果没有记录，告诉我哪个 ADR 最相关。"
+```
+
+**在 PR 里引用 ADR：**
+
+```
+PR description 模板：
+## 相关决策
+
+本次变更涉及 ADR-0042（分布式锁策略）中记录的模式。
+如果修改了相关行为，请同步更新 ADR。
+```
+
+**ADR 的维护：**
+
+```bash
+# 定期回顾过时的 ADR
+claude "检查 docs/decisions/ 里所有标记为 Accepted 的 ADR：
+1. 哪些涉及的技术已经被替换了？
+2. 哪些决策已经被实际情况推翻了？
+3. 推荐需要更新状态（Deprecated/Superseded）的 ADR
+
+我们每季度做一次 ADR review。"
+```
+
+**最重要的是开始写：**
+
+ADR 不需要完美。一个 100 字的 ADR（决策是什么，为什么这么决定）比没有 ADR 好 100 倍。
+
+Claude Code 帮你把"把思考过程写下来"这件事的摩擦降到最低。这没有理由不做。

@@ -1,0 +1,82 @@
+---
+title: "Feature Flag 的工程实践：用 Claude Code 管理功能开关"
+date: "2026-05-10"
+tags: ["claude-code", "feature-flags", "deployment", "engineering", "risk-management"]
+pro: false
+---
+
+Feature Flag 是降低部署风险的最有效工具之一。但很多团队用得太随意——功能上线后忘记清理旧 flag，代码里到处是条件分支，最后比没有还乱。Claude Code 可以帮你系统化地管理这件事。
+
+**定义 Flag 的标准：**
+
+```bash
+claude "为我们的 feature flag 系统设计规范：
+1. 命名约定（能从名字知道功能、状态、到期时间）
+2. 类型分类（实验性/发布控制/运维开关）
+3. 必须记录的元数据（owner、创建时间、预期清理时间）
+4. 什么时候必须写 ADR（影响架构的 flag）
+
+输出可以直接用的 flag 定义模板。"
+```
+
+**生成 Feature Flag 实现：**
+
+```bash
+claude "实现一个简单的 feature flag 系统（Go）：
+要求：
+- Flag 值从环境变量读取（简单、无依赖）
+- 支持按用户 ID 灰度（用 hash 分组）
+- 提供类型安全的 API（不是裸 map[string]bool）
+- 有明确的 nil 处理（flag 不存在时的默认行为）
+
+不需要动态更新，重新部署就可以改 flag。"
+```
+
+**代码里的 Flag 使用审查：**
+
+```bash
+claude "扫描代码库里所有 feature flag 的使用：
+1. 哪些 flag 已经全量开启超过 1 个月（应该清理）？
+2. 哪些 flag 的条件分支超过 3 处（代码复杂度高）？
+3. 有没有 flag 在测试里被绕过（测试不可靠）？
+4. 哪些 flag 没有记录 owner？
+
+输出需要关注的 flag 列表。"
+```
+
+**Flag 清理的代码迁移：**
+
+```bash
+claude "feature flag 'new_payment_flow' 现在要全量开启并删除。
+帮我：
+1. 找出所有引用这个 flag 的代码
+2. 把 true 分支的代码保留，删除 false 分支和 flag 检查
+3. 删除 flag 定义和相关测试 mock
+4. 更新相关测试（之前有两组测试，合并成一组）
+
+分步操作，每步给我确认。"
+```
+
+**灰度发布的监控：**
+
+```bash
+claude "我们要对 10% 的用户开启新的推荐算法（flag: new_recommendation）。
+帮我设计监控方案：
+1. 需要对比哪些指标（新老算法分别记录）
+2. 什么指标触发回滚（自动 vs 手动）
+3. 如何确认 10% 和 90% 的用户行为基线一致（避免采样偏差）
+4. 全量开启的判断标准"
+```
+
+**Flag 债务的预防：**
+
+```bash
+# 在 CLAUDE.md 里加规则
+claude "为 CLAUDE.md 添加 feature flag 的规范：
+- 每个 flag 必须有 owner 和预期清理日期
+- 超过 90 天的 flag 在 CI 里报警
+- release flag（控制新功能可见性）和 experiment flag（A/B 测试）分开管理
+- 测试必须覆盖 flag 开启和关闭两种情况"
+```
+
+Feature Flag 的技术实现不难，难的是纪律——创建容易，清理被一直推迟。Claude Code 帮你把"定期清理"从需要记忆的任务变成自动化检查。
