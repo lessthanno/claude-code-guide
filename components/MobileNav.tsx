@@ -6,8 +6,8 @@ import { usePathname } from 'next/navigation'
 const NAV_ITEMS = [
   { label: 'Feed', emoji: '⚡', href: '/' },
   { label: '手册', emoji: '📖', href: '/handbook' },
-  { label: '开始', emoji: '📌', href: '/start' },
-  { label: 'Pro', emoji: '⭐', href: '/pro' },
+  { label: '日报', emoji: '🗞️', href: '/c/daily' },
+  { label: '社群', emoji: '⭐', href: '/pro' },
 ]
 
 export default function MobileNav() {

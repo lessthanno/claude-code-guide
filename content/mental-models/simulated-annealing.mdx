@@ -126,6 +126,34 @@ T 低 → P 小 → 几乎只接受更好的解 → 精细微调</div>
         <li>判断标准：同一类型的变动已经连续 3 次没有提升 → 升温，换变动类型</li>
       </ul>
     </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>Prompt 调优协议</span>
+      </div>
+<pre><span class="cm">## Prompt 调优协议（模拟退火模式）
+
+### 当前处于哪个阶段？
+- 高温期：新任务、新场景、效果还差。此时大改，不计较单次变差。
+- 低温期：效果已经 7+/10，微调收敛。此时小改，不接受退步。
+
+### 升温触发条件（任意一条）
+- 同类改法连续 3 次无效
+- 被同一个问题卡超过 2 天
+- 输出得分长期在 6-7 震荡，无法突破
+
+### 高温期允许的动作
+- 完全换掉 persona / role 设定
+- 增删整个 example 段落
+- 改变输出格式（JSON vs Markdown vs 纯文本）
+- 换 task framing（从"生成"改成"检查"）
+
+### 低温期禁止的动作
+- 同时改超过 2 处
+- 接受比上一版得分低的版本</span></pre>
+    </div>
   </div>
 
   <!-- ===== 02 傅里叶分解 ===== -->

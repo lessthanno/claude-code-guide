@@ -42,8 +42,8 @@ pro: false
       </div>
 <pre><span class="cm">// 三条产品线的帕累托配置</span>
 <span class="kw">const</span> paretoConfigs = {
-  <span class="cm">// FujiPay 支付确认：速度 > 质量 > 成本</span>
-  <span class="str">'fujipay-confirm'</span>: {
+  <span class="cm">// 支付确认：速度 > 质量 > 成本</span>
+  <span class="str">'payment-confirm'</span>: {
     model: <span class="str">'claude-haiku-4-5'</span>,
     concurrency: <span class="num">10</span>,
     maxRetries: <span class="num">1</span>,          <span class="cm">// 宁可失败，不能超时</span>
@@ -62,8 +62,8 @@ pro: false
     tradeoff: <span class="str">'speed=4, quality=9, cost=5'</span>,
   },
   
-  <span class="cm">// UXLINK 数据分析：成本 > 质量 > 速度</span>
-  <span class="str">'uxlink-analytics'</span>: {
+  <span class="cm">// 数据分析：成本 > 质量 > 速度</span>
+  <span class="str">'data-analytics'</span>: {
     model: <span class="str">'claude-haiku-4-5'</span>,
     concurrency: <span class="num">1</span>,          <span class="cm">// 串行，省 token</span>
     maxRetries: <span class="num">2</span>,
@@ -110,6 +110,29 @@ pro: false
     <div class="callout callout-warn">
       <strong>⚠ 反模式</strong>
       给同一个 agent 设置"又快又好又便宜"的目标，然后不停调参试图同时提升三个维度。这违反了帕累托定理。正确做法是先决定"什么最重要"，再接受另外两个维度的牺牲。
+    </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>架构决策约束</span>
+      </div>
+<pre><span class="cm">## 架构决策原则（帕累托约束）
+
+### 本项目的优先级（按顺序）
+1. 正确性 > 速度 > 成本
+   - 宁可慢，不要错
+   - 宁可贵，不要用户不信任
+
+### 禁止"同时优化三个维度"
+- 每次架构讨论必须明确：这次牺牲哪个
+- 如果有方案声称"全都能优化"，必须质疑
+
+### agent 配置时的 tradeoff 模板
+- 高质量场景（对外输出）：quality first，允许慢 3x、贵 5x
+- 高频内部场景（数据处理）：speed first，允许质量 -20%
+- 实验/原型阶段：cost first，允许不稳定</span></pre>
     </div>
   </div>
 

@@ -15,23 +15,20 @@ export const SPACE_GROUPS = [
     spaces: [] as Channel[],
     links: [
       { label: '快速开始', href: '/start', emoji: '📌' },
-      { label: '加入 Pro', href: '/pro', emoji: '⭐️' },
       { label: '心智模型手册', href: '/handbook', emoji: '📖' },
     ],
   },
   {
-    label: '深度内容',
+    label: '内容',
     spaces: ['daily', 'mental-models'] as Channel[],
     links: [],
   },
   {
-    label: '实战模板',
-    spaces: ['templates'] as Channel[],
-    links: [],
-  },
-  {
-    label: '社区',
-    spaces: ['community'] as Channel[],
-    links: [],
+    label: '社群',
+    spaces: [] as Channel[],
+    links: [
+      { label: '加入即刻圈', href: 'https://web.okjike.com/u/9C10E4D1-B28F-46F1-A399-A6170657E3E1', emoji: '🔗' },
+      { label: 'Pro 会员', href: '/pro', emoji: '⭐️' },
+    ],
   },
 ]

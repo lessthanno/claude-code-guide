@@ -119,6 +119,27 @@ Kd·de   = D 项：误差变化速度 → 预判式修正</div>
         <li>推荐起点：Kp=0.5, Ki=0.1, Kd=0.3，根据实际震荡情况调整</li>
       </ul>
     </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>Agent 质量反馈规则</span>
+      </div>
+<pre><span class="cm">## Agent 输出质量反馈（PID 模式）
+
+### P 项（当前误差）— 立即修正
+- 单次输出明显偏差时：在下一条消息里直接指出，让 Claude 重做这一步
+- 不要积累问题，当场纠正
+
+### I 项（历史积累）— 系统性修正
+- 如果同类问题出现 3 次以上：更新本文件的相关规则
+- 触发信号：反复提醒同一件事 → 说明 system prompt 有结构性漏洞
+
+### D 项（变化趋势）— 预判式修正
+- 输出质量在变差但还没崩溃时：主动重新描述任务背景和约束
+- 不要等到质量已经很差再修正，提前干预成本最低</span></pre>
+    </div>
   </div>
 
   <!-- ===== 05 奇异吸引子 ===== -->
