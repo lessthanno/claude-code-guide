@@ -16,6 +16,7 @@ const CHAPTERS = [
   { id: 'bayes',     num: '08', name: '贝叶斯更新', domain: 'Claude 能力评估',   tag: 'tag-math', label: '数学' },
   { id: 'kalman',    num: '09', name: '卡尔曼滤波', domain: '质量状态跟踪',       tag: 'tag-ctrl', label: '控制' },
   { id: 'nash',      num: '10', name: '纳什均衡',   domain: '多 Agent 协调',     tag: 'tag-math', label: '数学' },
+  { id: 'lyapunov',  num: '11', name: '李雅普诺夫', domain: '流水线鲁棒性',       tag: 'tag-ctrl', label: '控制' },
 ]
 
 function getHandbookContent(): string {

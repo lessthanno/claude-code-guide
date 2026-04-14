@@ -1,0 +1,171 @@
+---
+num: "11"
+title: "李雅普诺夫稳定性 · Lyapunov Stability"
+titleEn: "Lyapunov Stability"
+subtitle: "控制论 · 用于 Agent 流水线鲁棒性设计"
+domain: control
+tags: ["agent", "robustness", "architecture", "edge-cases"]
+date: "2026-04-19"
+pro: false
+---
+
+
+<div class="concept" id="lyapunov">
+    <div class="concept-header">
+      <div class="concept-num">11</div>
+      <div class="concept-title-block">
+        <h2>李雅普诺夫稳定性 · Lyapunov Stability</h2>
+        <div class="concept-subtitle">控制论 · 用于 Agent 流水线鲁棒性设计</div>
+      </div>
+      <span class="domain-badge tag-ctrl">控制</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心概念</div>
+      <div class="formula">李雅普诺夫稳定：系统从任意接近均衡点的初始状态出发，
+都能保持在均衡点附近（不发散）。
+
+渐近稳定：不仅不发散，还能最终收敛回均衡点。
+不稳定：微小扰动会导致系统状态无界发散。
+
+直觉：弹簧振子 = 李雅普诺夫稳定
+     倒立摆（未控制）= 不稳定
+     自动纠偏的倒立摆 = 渐近稳定</div>
+      <div class="formula-note">关键直觉：不要只针对"正常输入"测试你的 agent，要针对"边界扰动"测试。真正的鲁棒性 = 遇到扰动后能回到正轨，而不是一路偏离。</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Agent 流水线的稳定性问题</div>
+      <div class="scenario">
+        <div class="scenario-tag">典型失稳场景</div>
+        <p>你的摘要 agent 在正常输入下输出很好。但当输入文章包含大量代码块时，它开始输出格式混乱的内容；当输入是非常短的文本时，它又开始过度发挥"编造"内容。这是一个不稳定的系统——小扰动（非典型输入）导致系统发散到你不想要的状态。</p>
+      </div>
+      <table class="decision-table">
+        <tr><th>系统行为</th><th>稳定性类型</th><th>对应动作</th></tr>
+        <tr>
+          <td>异常输入 → 仍然输出合理结果</td>
+          <td class="signal">李雅普诺夫稳定</td>
+          <td class="action">继续，可以上线</td>
+        </tr>
+        <tr>
+          <td>异常输入 → 短暂偏离后自动回正</td>
+          <td class="signal">渐近稳定</td>
+          <td class="action">最佳状态，继续</td>
+        </tr>
+        <tr>
+          <td>异常输入 → 输出越来越奇怪</td>
+          <td class="signal">不稳定</td>
+          <td class="action">加边界检查，截断异常路径</td>
+        </tr>
+        <tr>
+          <td>正常输入偶尔触发完全错误的路径</td>
+          <td class="signal">临界稳定</td>
+          <td class="action">找到触发条件，加断路器</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — 稳定性测试框架</div>
+      <div class="code-header">
+        <span>stability-test.ts</span>
+        <span>Agent 鲁棒性测试</span>
+      </div>
+<pre><span class="cm">// 李雅普诺夫稳定性测试：用"扰动"检验系统是否发散</span>
+<span class="kw">interface</span> <span class="var">StabilityTest</span> {
+  name: <span class="kw">string</span>
+  baseInput: <span class="kw">string</span>         <span class="cm">// 正常输入（均衡点附近）</span>
+  perturbations: <span class="kw">string</span>[]  <span class="cm">// 各种扰动</span>
+  <span class="fn">isStable</span>: (output: <span class="kw">string</span>) => <span class="kw">boolean</span>  <span class="cm">// 是否仍在可接受范围</span>
+}
+
+<span class="kw">const</span> summaryAgentStabilityTests: <span class="var">StabilityTest</span>[] = [
+  {
+    name: <span class="str">'短文本扰动'</span>,
+    baseInput: <span class="str">'一篇正常长度的技术文章...'</span>,
+    perturbations: [
+      <span class="str">'ok'</span>,
+      <span class="str">'.'</span>,
+      <span class="str">''</span>,
+    ],
+    <span class="fn">isStable</span>: (output) => output.length < <span class="num">200</span> && !output.includes(<span class="str">'根据文章'</span>),
+  },
+  {
+    name: <span class="str">'代码块扰动'</span>,
+    baseInput: <span class="str">'普通文章'</span>,
+    perturbations: [
+      <span class="str">'```python\n' + 'x = 1\n'.repeat(200) + '```'</span>,  <span class="cm">// 超长代码块</span>
+    ],
+    <span class="fn">isStable</span>: (output) => !output.includes(<span class="str">'```'</span>),  <span class="cm">// 摘要不应包含代码块</span>
+  },
+]
+
+<span class="kw">async function</span> <span class="fn">testStability</span>(agent: <span class="var">Agent</span>, tests: <span class="var">StabilityTest</span>[]) {
+  <span class="kw">const</span> results = []
+
+  <span class="kw">for</span> (<span class="kw">const</span> test <span class="kw">of</span> tests) {
+    <span class="kw">for</span> (<span class="kw">const</span> perturbation <span class="kw">of</span> test.perturbations) {
+      <span class="kw">const</span> output = <span class="kw">await</span> agent.<span class="fn">run</span>(perturbation)
+      <span class="kw">const</span> stable = test.<span class="fn">isStable</span>(output)
+
+      results.<span class="fn">push</span>({
+        test: test.name,
+        perturbation: perturbation.<span class="fn">slice</span>(<span class="num">0</span>, <span class="num">30</span>),
+        stable,
+        output: output.<span class="fn">slice</span>(<span class="num">0</span>, <span class="num">100</span>),
+      })
+
+      <span class="kw">if</span> (!stable) {
+        console.<span class="fn">warn</span>(<span class="str">`⚠ 不稳定：${test.name} | 扰动：${perturbation.slice(0, 30)}`</span>)
+      }
+    }
+  }
+
+  <span class="kw">const</span> unstableCount = results.<span class="fn">filter</span>(r => !r.stable).length
+  console.<span class="fn">log</span>(<span class="str">`稳定性评分：${((1 - unstableCount / results.length) * 100).toFixed(0)}%`</span>)
+  <span class="kw">return</span> results
+}</pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式</strong>
+      只用"正常用例"测试 agent 性能，然后在生产环境遇到边界输入时崩溃。真实用户输入的分布远比你预期的宽——空字符串、超长文本、特殊字符、非目标语言，都会出现。
+    </div>
+
+    <div class="callout callout-tip">
+      <strong>✓ 实践原则</strong>
+      为每个 agent 定义"稳定域"：什么样的输入范围是可接受的，超出范围后系统应该怎么降级（拒绝处理 / 返回默认值 / 触发人工审核），而不是静默地输出错误结果。
+    </div>
+
+    <div class="quick-ref">
+      <h4>四种常见扰动类型</h4>
+      <ul>
+        <li>长度扰动：空字符串、超长输入（>10倍正常长度）</li>
+        <li>格式扰动：全是代码、全是数字、全是特殊字符</li>
+        <li>语言扰动：非目标语言输入（日文、阿拉伯文等）</li>
+        <li>语义扰动：与任务完全无关的内容、对抗性输入</li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>Agent 鲁棒性规则</span>
+      </div>
+<pre><span class="cm">## Agent 鲁棒性规则（李雅普诺夫原则）
+
+### 必须处理的边界输入
+- 空输入：返回明确错误，不要静默失败
+- 超长输入（>预期 5 倍）：截断 + 告知，不要崩溃
+- 非预期语言：检测后明确告知，不要乱猜
+
+### 稳定域定义
+- 每个 agent 的 system prompt 开头必须声明"本 agent 处理什么类型的输入"
+- 超出稳定域的输入应触发 fallback，不是随机输出
+
+### 发散预防
+- 不允许 agent 在单次对话中无限追加内容（设置最大 token 限制）
+- 不允许 agent 自我引用上一轮输出作为新的输入（防止雪球效应）</span></pre>
+    </div>
+  </div>
