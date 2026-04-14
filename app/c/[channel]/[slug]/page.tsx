@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Sidebar from '@/components/Sidebar'
@@ -13,6 +14,38 @@ export async function generateStaticParams() {
   return VALID_CHANNELS.flatMap(channel =>
     getChannelPosts(channel).map(post => ({ channel, slug: post.slug }))
   )
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ channel: string; slug: string }>
+}): Promise<Metadata> {
+  const { channel, slug } = await params
+  const post = getPost(channel as Channel, slug)
+  if (!post) return {}
+
+  const description = post.excerpt.replace(/\.\.\.$/, '').slice(0, 120)
+  const siteUrl = 'https://lessthanno.github.io/claude-code-guide'
+  const url = `${siteUrl}/c/${channel}/${slug}/`
+
+  return {
+    title: `${post.title} · Claude Code 工程师手册`,
+    description,
+    openGraph: {
+      title: post.title,
+      description,
+      url,
+      type: 'article',
+      publishedTime: post.date,
+      tags: post.tags,
+    },
+    twitter: {
+      card: 'summary',
+      title: post.title,
+      description,
+    },
+  }
 }
 
 const DOMAIN_LABELS = {
@@ -119,19 +152,31 @@ export default async function PostPage({
                 </div>
               )}
 
-              {post.tags.length > 0 && (
-                <div style={{ display: 'flex', gap: '6px', marginTop: '14px', flexWrap: 'wrap' }}>
-                  {post.tags.map(tag => (
-                    <span key={tag} style={{
-                      fontSize: '11px',
-                      padding: '2px 8px',
-                      borderRadius: '20px',
-                      border: '1px solid var(--border2)',
-                      color: 'var(--text3)',
-                    }}>#{tag}</span>
-                  ))}
-                </div>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '14px', flexWrap: 'wrap' }}>
+                {post.tags.map(tag => (
+                  <span key={tag} style={{
+                    fontSize: '11px',
+                    padding: '2px 8px',
+                    borderRadius: '20px',
+                    border: '1px solid var(--border2)',
+                    color: 'var(--text3)',
+                  }}>#{tag}</span>
+                ))}
+                <a
+                  href={`https://x.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(`https://lessthanno.github.io/claude-code-guide/c/${ch}/${slug}/`)}`}
+                  target="_blank"
+                  rel="noopener"
+                  style={{
+                    marginLeft: 'auto',
+                    fontSize: '11px',
+                    padding: '3px 10px',
+                    borderRadius: '20px',
+                    border: '1px solid var(--border2)',
+                    color: 'var(--text3)',
+                    textDecoration: 'none',
+                  }}
+                >𝕏 分享</a>
+              </div>
             </div>
 
             {/* Content — rendered as HTML from MDX */}
