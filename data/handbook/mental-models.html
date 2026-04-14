@@ -471,7 +471,7 @@
   <div class="page-header">
     <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#666;font-weight:600;margin-bottom:12px;">Vol.01 · 参考手册</div>
     <h1>Claude Code 开发心智模型手册</h1>
-    <p>11 个来自物理/数学/控制论/概率论/博弈论的核心概念，映射到 Claude Code 真实开发场景。<br>每个概念包含：核心公式 → 识别信号 → 代码模式 → 错误用法 → CLAUDE.md 片段。</p>
+    <p>12 个来自物理/数学/控制论/概率论/博弈论/电子工程的核心概念，映射到 Claude Code 真实开发场景。<br>每个概念包含：核心公式 → 识别信号 → 代码模式 → 错误用法 → CLAUDE.md 片段。</p>
     <div class="meta-pills">
       <span class="pill">Claude Code</span>
       <span class="pill">Prompt Engineering</span>
@@ -1922,6 +1922,99 @@ K 低（接近 0）→ 更信任历史，估计变化慢</div>
     </div>
   </div>
 
+  <!-- ===== 12 阻抗匹配 ===== -->
+  <div class="concept" id="impedance">
+    <div class="concept-header">
+      <div class="concept-num">12</div>
+      <div class="concept-title-block">
+        <h2>阻抗匹配 · Impedance Matching</h2>
+        <div class="concept-subtitle">电子工程 · 用于 Prompt 与模型思维方式的对齐</div>
+      </div>
+      <span class="domain-badge tag-phys">物理</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心概念</div>
+      <div class="formula">阻抗匹配：信号源阻抗 = 负载阻抗时，功率传输效率最高。
+
+LLM 类比：
+- 信号源 = 你的意图（Prompt）
+- 负载 = 模型的"接收方式"
+- 匹配良好 → 模型准确执行意图，最小幻觉
+- 匹配不良 → 模型误解，过度脑补，反复错方向</div>
+      <div class="formula-note">关键直觉：模型的"阻抗"是固定的。问题不是模型不够聪明，而是你的 Prompt 和它的接收方式不匹配。</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">常见阻抗不匹配模式</div>
+      <table class="decision-table">
+        <tr><th>不匹配类型</th><th>症状</th><th>匹配方案</th></tr>
+        <tr>
+          <td>意图太模糊</td>
+          <td class="signal">模型过度脑补，答案方向偏</td>
+          <td class="action">写明"你不需要做什么"</td>
+        </tr>
+        <tr>
+          <td>约束没有层次</td>
+          <td class="signal">模型平等对待所有要求，优先级混乱</td>
+          <td class="action">用 1/2/3 明确优先级顺序</td>
+        </tr>
+        <tr>
+          <td>输出格式未指定</td>
+          <td class="signal">模型猜测格式，每次不同</td>
+          <td class="action">给出示例格式（few-shot）</td>
+        </tr>
+        <tr>
+          <td>一次请求太多</td>
+          <td class="signal">模型完成了大部分，遗漏了少数</td>
+          <td class="action">拆分为顺序的子任务</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — 阻抗匹配改造</div>
+      <div class="code-header">
+        <span>prompt-before-after.md</span>
+        <span>低阻抗 vs 高阻抗匹配</span>
+      </div>
+<pre><span class="cm">// 低匹配（常见写法）</span>
+<span class="str">"帮我优化这段代码"</span>
+
+<span class="cm">// 高匹配（对齐模型接收方式）</span>
+<span class="str">`目标：减少数据库查询次数（不是重构代码结构）
+约束：不改函数签名，不引入新依赖
+输出：① 问题诊断 ② 具体改动 ③ 改后代码
+不需要：测试代码，基础知识解释`</span>
+
+<span class="cm">// 现在模型知道：做什么、不做什么、输出什么格式</span></pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式</strong>
+      认为"Prompt 越长越好"。超过一定长度后，每增加一条规则都可能降低效果——模型在众多约束之间权衡，阻抗反而增大。真正的匹配是精简 Prompt + 明确优先级。
+    </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>Prompt 阻抗匹配规则</span>
+      </div>
+<pre><span class="cm">## Prompt 设计规则（阻抗匹配原则）
+
+### 必须包含的元素
+- 任务目标：一句话说清楚要做什么
+- 排除项：明确说"不需要做什么"（减少过度脑补）
+- 输出格式：提供一个示例
+
+### 禁止的模式
+- 不用"帮我优化/改进/完善"等模糊动词
+- 不在单次请求中混合多个不同类型的任务
+- 不用"尽量/最好/如果可以"（会降低执行优先级）</span></pre>
+    </div>
+  </div>
+
   <!-- ===== 信号表 ===== -->
   <div class="concept" id="signals">
     <div class="concept-header">
@@ -1988,6 +2081,11 @@ K 低（接近 0）→ 更信任历史，估计变化慢</div>
         <td>正常输入没问题，边界输入输出乱飞</td>
         <td class="signal">李雅普诺夫稳定性</td>
         <td class="action">做扰动测试，加边界检查和 fallback</td>
+      </tr>
+      <tr>
+        <td>Prompt 写了很多，但模型经常"理解偏了"</td>
+        <td class="signal">阻抗匹配</td>
+        <td class="action">加"不需要做什么"，给出输出示例</td>
       </tr>
     </table>
   </div>
@@ -2058,6 +2156,11 @@ K 低（接近 0）→ 更信任历史，估计变化慢</div>
         <td>"测试通过了，应该没问题"（只测正常路径）</td>
         <td>没有做扰动测试，稳定性未知</td>
         <td class="action">针对空输入、超长输入、特殊字符做专项测试</td>
+      </tr>
+      <tr>
+        <td>"把所有要求都写进一个 Prompt 应该最全"</td>
+        <td>Prompt 过长，阻抗增大，执行率下降</td>
+        <td class="action">精简 Prompt，加优先级和排除项，而不是堆积规则</td>
       </tr>
     </table>
   </div>

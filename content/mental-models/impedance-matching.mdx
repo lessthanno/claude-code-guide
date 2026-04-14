@@ -1,0 +1,143 @@
+---
+num: "12"
+title: "阻抗匹配 · Impedance Matching"
+titleEn: "Impedance Matching"
+subtitle: "电子工程 · 用于 Prompt 与模型思维方式的对齐"
+domain: physics
+tags: ["prompt-engineering", "communication", "mental-model"]
+date: "2026-04-21"
+pro: false
+---
+
+
+<div class="concept" id="impedance">
+    <div class="concept-header">
+      <div class="concept-num">12</div>
+      <div class="concept-title-block">
+        <h2>阻抗匹配 · Impedance Matching</h2>
+        <div class="concept-subtitle">电子工程 · 用于 Prompt 与模型思维方式的对齐</div>
+      </div>
+      <span class="domain-badge tag-phys">物理</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心概念</div>
+      <div class="formula">阻抗匹配原理（电子工程）：
+当信号源阻抗 = 负载阻抗时，功率传输效率最高。
+
+不匹配 → 信号反射，能量损耗，传输质量下降。
+
+LLM 的类比：
+信号源 = 你的意图（Prompt）
+负载 = 模型的"接收方式"
+阻抗匹配 = Prompt 的结构契合模型的处理方式
+
+匹配良好 → 模型准确执行意图，最小幻觉
+匹配不良 → 模型误解，过度脑补，反复错方向</div>
+      <div class="formula-note">关键直觉：模型的"阻抗"是固定的——它有偏好的信息格式和结构。问题不是模型不够聪明，而是你的 Prompt 和它的接收方式不匹配。</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">常见阻抗不匹配模式</div>
+      <table class="decision-table">
+        <tr><th>不匹配类型</th><th>症状</th><th>匹配方案</th></tr>
+        <tr>
+          <td>意图太模糊</td>
+          <td class="signal">模型过度脑补，答案方向偏</td>
+          <td class="action">写明"你不需要做什么"</td>
+        </tr>
+        <tr>
+          <td>约束没有层次</td>
+          <td class="signal">模型平等对待所有要求，优先级混乱</td>
+          <td class="action">用 1/2/3 明确优先级顺序</td>
+        </tr>
+        <tr>
+          <td>输出格式未指定</td>
+          <td class="signal">模型猜测格式，每次不同</td>
+          <td class="action">给出示例格式（few-shot）</td>
+        </tr>
+        <tr>
+          <td>一次请求太多</td>
+          <td class="signal">模型完成了大部分，遗漏了少数</td>
+          <td class="action">拆分为顺序的子任务</td>
+        </tr>
+        <tr>
+          <td>专业术语不统一</td>
+          <td class="signal">模型用的词和你的系统不一致</td>
+          <td class="action">在 CLAUDE.md 定义项目术语表</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">阻抗匹配的实际改造</div>
+      <div class="code-header">
+        <span>prompt-before-after.md</span>
+        <span>阻抗匹配前 vs 后</span>
+      </div>
+<pre><span class="cm">// 低阻抗匹配（常见写法）</span>
+<span class="str">"帮我优化这段代码"</span>
+
+<span class="cm">// 问题：意图模糊，"优化"可以是性能/可读性/安全性/…</span>
+<span class="cm">// 模型会根据自己的判断选一个方向，可能不是你想要的</span>
+
+<span class="cm">// ─────────────────────────────────────────────</span>
+
+<span class="cm">// 高阻抗匹配（对齐模型接收方式）</span>
+<span class="str">`
+目标：优化这段代码的执行性能（不是可读性）
+
+当前问题：每次调用都重新查询数据库，高并发时有瓶颈
+约束：不能改变函数签名，不能引入新依赖
+
+输出格式：
+1. 问题诊断（1-2句）
+2. 修改方案（列出具体改动）
+3. 改动后的代码
+
+不需要：解释语言基础，不需要写测试
+`</span>
+
+<span class="cm">// 现在模型知道：做什么、不做什么、输出什么格式</span>
+<span class="cm">// 阻抗匹配 → 功率（信息）传输效率最高</span></pre>
+    </div>
+
+    <div class="callout callout-tip">
+      <strong>✓ 阻抗匹配三要素</strong>
+      <ol style="margin: 8px 0 0; padding-left: 20px; font-size: 13px; line-height: 1.8;">
+        <li><strong>明确意图边界</strong>：说清楚做什么，更重要的是说清楚不做什么</li>
+        <li><strong>给出输出示例</strong>：一个好的 few-shot 示例比 100 字约束更有效</li>
+        <li><strong>拆分而不是堆叠</strong>：一次对话解决一个问题，顺序比并行更可靠</li>
+      </ol>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 常见误区</strong>
+      认为"Prompt 越长越好"。实际上，超过一定长度后，每增加一条规则都可能降低效果——因为模型要在众多约束之间权衡，阻抗反而增大。真正的匹配是精简的 Prompt + 明确的优先级。
+    </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>Prompt 阻抗匹配规则</span>
+      </div>
+<pre><span class="cm">## Prompt 设计规则（阻抗匹配原则）
+
+### 必须包含的元素
+- 任务目标：一句话说清楚要做什么
+- 排除项：明确说"不需要做什么"（减少过度脑补）
+- 输出格式：提供一个示例（哪怕是简单的）
+
+### 禁止的模式
+- 不用"帮我优化/改进/完善"这类模糊动词，改用具体的"减少函数调用次数/减少代码行数"
+- 不在单次请求中混合多个不同类型的任务（分开说）
+- 不用"尽量/最好/如果可以"，这类措辞会让模型降低执行优先级
+
+### 术语表
+[在这里定义项目特有的术语，避免模型使用不同词汇]
+- user = 终端用户，不是我们的工程师
+- service = 微服务，不是 Go service struct
+- pipeline = 内容生成流水线</span></pre>
+    </div>
+  </div>
