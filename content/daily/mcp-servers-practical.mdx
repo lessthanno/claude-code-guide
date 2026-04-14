@@ -1,0 +1,78 @@
+---
+title: "MCP Server 实战：给 Claude Code 接上真实世界的数据"
+date: "2026-04-25"
+tags: ["claude-code", "mcp", "tools", "integration"]
+pro: false
+---
+
+MCP（Model Context Protocol）让 Claude Code 能调用外部工具——数据库、API、文件系统、浏览器。装好之后，Claude 可以直接查你的 Postgres，不用你来回粘贴数据。
+
+**配置方式（`.claude/settings.json`）：**
+
+```json
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "DATABASE_URL": "postgresql://localhost/mydb"
+      }
+    },
+    "filesystem": {
+      "command": "npx", 
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/me/projects"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_..."
+      }
+    }
+  }
+}
+```
+
+**装好之后能做什么：**
+
+**数据库 MCP：**
+```bash
+claude "查询过去 7 天注册但没有完成首单的用户，
+分析他们的注册渠道分布"
+```
+Claude 直接执行 SQL，返回分析结果。不用你写查询、导出数据、再粘贴进来。
+
+**GitHub MCP：**
+```bash
+claude "找出过去 2 周所有包含 'payment' 关键词的 PR，
+总结主要改动方向"
+```
+
+**文件系统 MCP：**
+```bash
+claude "扫描 /projects/backend/logs/ 里昨天的日志，
+找出出现超过 10 次的错误模式"
+```
+
+**常用的 MCP Server：**
+
+| Server | 用途 | 安装 |
+|---|---|---|
+| server-postgres | PostgreSQL 查询 | `@modelcontextprotocol/server-postgres` |
+| server-sqlite | SQLite 文件 | `@modelcontextprotocol/server-sqlite` |
+| server-filesystem | 本地文件读写 | `@modelcontextprotocol/server-filesystem` |
+| server-github | GitHub API | `@modelcontextprotocol/server-github` |
+| server-brave-search | 网络搜索 | `@modelcontextprotocol/server-brave-search` |
+| server-slack | Slack 读写 | `@modelcontextprotocol/server-slack` |
+
+**安全注意事项：**
+
+MCP Server 让 Claude 有了执行真实操作的能力。几个原则：
+- 数据库用只读账号（Claude 不需要写权限来分析数据）
+- 敏感凭据放环境变量，不要硬写在 JSON 里
+- 生产数据库不要直连——用只读副本
+
+**自己写 MCP Server：**
+
+如果你有内部系统（自研监控、内部 API），可以用 TypeScript 或 Python 写一个 MCP Server，按协议暴露工具。Claude Code 会自动发现并使用它。这比"把数据粘贴给 Claude 分析"高效 10 倍。

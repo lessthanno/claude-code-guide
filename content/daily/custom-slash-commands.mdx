@@ -1,0 +1,91 @@
+---
+title: "自定义 Slash Command：把重复操作变成一行指令"
+date: "2026-04-23"
+tags: ["claude-code", "slash-commands", "workflow", "productivity"]
+pro: false
+---
+
+Claude Code 内置的 `/help`、`/clear`、`/compact` 只是起点。真正节省时间的是你自己写的命令。
+
+**在 `.claude/commands/` 里创建 Markdown 文件：**
+
+```
+.claude/
+  commands/
+    review.md
+    ship.md
+    test-coverage.md
+```
+
+每个文件就是一个 slash command，文件名即命令名。
+
+**示例：`/review` 命令**
+
+```markdown
+# /review
+
+审查当前 git diff 中的所有修改：
+
+1. 找出潜在的 bug 和边界条件
+2. 检查是否有遗漏的错误处理
+3. 确认没有引入新的安全问题
+4. 检查是否有硬编码的配置值
+
+输出格式：
+- 🔴 必须修复（阻止合并）
+- 🟡 建议修改（不阻止合并）
+- 🟢 可选改进
+
+不要评论代码风格。
+```
+
+**示例：`/ship` 命令**
+
+```markdown
+# /ship
+
+准备提交当前工作：
+
+1. 运行 `git diff --staged` 确认暂存的改动
+2. 检查是否有调试代码（console.log, fmt.Println, TODO）
+3. 生成 conventional commit 格式的提交信息
+4. 提示我确认后执行 commit
+
+不要自动 push，等我确认。
+```
+
+**示例：`/test-coverage` 命令**
+
+```markdown
+# /test-coverage
+
+分析测试覆盖情况：
+
+1. 找出最近修改的函数（git diff）
+2. 检查这些函数是否有对应的测试
+3. 列出缺少测试的公共接口
+4. 为优先级最高的 3 个写出测试骨架
+
+关注行为测试，不是实现细节。
+```
+
+**在命令里用 `$ARGUMENTS` 接收参数：**
+
+```markdown
+# /explain
+
+解释 $ARGUMENTS 这段代码：
+- 是什么在做什么
+- 为什么这样写（可能的历史原因）
+- 有没有更清晰的写法
+```
+
+用法：`/explain UserRepository.findByEmail`
+
+**最适合封装成命令的操作：**
+- 每次 PR 前的 checklist
+- 特定项目的代码生成模板
+- 统一的调试流程
+- 需要特定输出格式的分析任务
+
+命令文件提交到 git，团队共享。这比每个人在脑子里记一套提示词更可靠。

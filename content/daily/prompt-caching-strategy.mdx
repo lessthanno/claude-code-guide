@@ -1,0 +1,76 @@
+---
+title: "Prompt Caching：为什么你的 API 成本可以降低 90%"
+date: "2026-04-24"
+tags: ["claude-code", "api", "cost", "caching", "performance"]
+pro: false
+---
+
+Anthropic 的 prompt caching 可以让重复的大段上下文只计费一次。但很多人用了 Claude API 半年还不知道这个功能。
+
+**它解决什么问题：**
+
+```
+没有缓存：
+每次请求 = system prompt (2000 tokens) + 对话 (500 tokens)
+10 次对话 = 25000 tokens 输入费用
+
+有缓存：
+首次请求：写入 2000 tokens（缓存写入，1.25× 费用）
+后续 9 次：读取缓存 + 500 tokens 新内容
+总计：2500 tokens + 9 × 500 = 7000 tokens 有效输入
+成本降低：> 70%
+```
+
+**如何开启（Anthropic SDK）：**
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+
+response = client.messages.create(
+    model="claude-sonnet-4-5",
+    max_tokens=1024,
+    system=[
+        {
+            "type": "text",
+            "text": "你是一个代码审查工具...",
+        },
+        {
+            "type": "text", 
+            "text": open("codebase_context.md").read(),  # 几千 tokens 的上下文
+            "cache_control": {"type": "ephemeral"}  # 这一行开启缓存
+        }
+    ],
+    messages=[{"role": "user", "content": "审查这个函数"}]
+)
+```
+
+**缓存的有效期：5 分钟**
+
+这意味着：
+- 多轮对话：把 system prompt 标记为可缓存，每轮只付新消息的费用
+- 批量任务：同一份大文档处理 N 次，只读取一次
+
+**什么值得缓存：**
+
+| 内容类型 | 适合缓存 | 理由 |
+|---|---|---|
+| 大型 CLAUDE.md / system prompt | ✓ | 每次对话都一样 |
+| 代码库文件内容 | ✓ | 单次 session 内不变 |
+| 用户历史消息 | ✓ | 多轮对话共享前缀 |
+| 当前请求的新内容 | ✗ | 每次都不同 |
+
+**Claude Code CLI 怎么办：**
+
+Claude Code CLI 自动处理缓存。你能做的：
+- 保持 CLAUDE.md 稳定（不要每次都改）
+- Session 内不要频繁 `/clear`（清除后缓存重建）
+- 长任务用一个 session 完成，而不是多个短 session
+
+**实测数据（来自 Anthropic 文档）：**
+- 缓存写入：基础输入价格 × 1.25
+- 缓存读取：基础输入价格 × 0.1
+- 超过 1024 tokens 的内容才能缓存
+
+对于有大量重复上下文的应用（RAG、代码分析工具），缓存是 ROI 最高的优化点之一。
