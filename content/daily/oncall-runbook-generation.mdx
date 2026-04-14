@@ -1,0 +1,87 @@
+---
+title: "用 Claude Code 生成 On-call Runbook：让凌晨 3 点的自己不需要思考"
+date: "2026-04-29"
+tags: ["claude-code", "oncall", "runbook", "operations"]
+pro: false
+---
+
+On-call 最危险的时刻不是面对复杂问题，而是面对复杂问题时你只睡了 3 小时。好的 Runbook 让你在半睡眠状态下也能机械地执行正确步骤。
+
+**从代码生成 Runbook：**
+
+```bash
+claude "读 src/services/payment.go，
+为 payment 服务生成 on-call Runbook：
+- 服务宕机的恢复步骤
+- 支付成功率下降的排查流程
+- 数据库连接耗尽的处理方法
+- 高延迟的诊断步骤
+
+格式：问题描述 → 初步判断方法 → 详细排查步骤 → 解决方案 → 升级条件
+每个步骤要是可以复制粘贴的命令，不要是'检查日志'这种模糊描述。"
+```
+
+**生成具体的诊断命令：**
+
+```bash
+claude "基于我们的技术栈（Go + PostgreSQL + Redis + Docker），
+生成 on-call 诊断命令清单：
+
+1. 快速健康检查（< 1 分钟完成）
+2. 服务状态检查命令
+3. 数据库连接和慢查询检查
+4. 内存 / CPU 使用情况
+5. 最近的错误日志
+6. 外部依赖可达性检查
+
+输出为可以直接存成 shell 脚本的格式。"
+```
+
+**示例生成的诊断脚本：**
+
+```bash
+#!/bin/bash
+# quick-check.sh — on-call 初步诊断
+
+echo "=== Services ==="
+docker ps --format "{{.Names}}: {{.Status}}"
+
+echo "=== API Health ==="
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/health
+
+echo "=== DB Connections ==="
+psql $DATABASE_URL -c "SELECT count(*), state FROM pg_stat_activity GROUP BY state;"
+
+echo "=== Recent Errors ==="
+docker logs payment-api --since 5m 2>&1 | grep -E "ERROR|FATAL" | tail -20
+
+echo "=== Redis ==="
+redis-cli ping && redis-cli info memory | grep used_memory_human
+```
+
+**后验（Post-mortem）模板生成：**
+
+```bash
+claude "生成一个 post-mortem 模板，
+适合我们团队（5 人工程团队，没有专职 SRE）：
+- 格式要简洁，填写时间 < 30 分钟
+- 包含时间线、根因、影响范围、修复措施、预防措施
+- 重点是学习，不是追责
+
+用中文，用 Markdown 格式。"
+```
+
+**把历史事故转成 Runbook 条目：**
+
+```bash
+claude "这是我们上周的 incident 记录（incident_2026-04-22.md）。
+从这个事故中提取：
+1. 诊断步骤（下次遇到相同问题怎么快速确认）
+2. 恢复步骤（按顺序的操作清单）
+3. 告警补充（这次怎么没有告警提前发现）
+4. 预防措施进度（标注哪些已完成，哪些待处理）
+
+加入现有的 runbook.md 文件对应章节。"
+```
+
+最好的 Runbook 不是一开始就写好的，而是每次 incident 后更新一次。让 Claude 帮你从每次事故中系统性地提取知识，比事后靠记忆更可靠。
