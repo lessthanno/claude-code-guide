@@ -1,0 +1,103 @@
+---
+title: "测试策略：用 Claude Code 写有意义的测试，而不是覆盖率数字"
+date: "2026-05-02"
+tags: ["claude-code", "testing", "strategy", "workflow"]
+pro: false
+---
+
+覆盖率 80% 的测试套件里可能有 70% 是在测"代码执行了"而不是"行为正确"。Claude Code 能帮你写更好的测试——但你得先告诉它测什么。
+
+**让 Claude 分析测试价值：**
+
+```bash
+claude "分析 src/services/payment.go 的 ProcessPayment 函数，
+列出最重要的 10 个测试场景，按业务风险排序：
+- 哪些情况下出错会影响用户金钱？
+- 哪些边界条件最容易被遗漏？
+- 哪些外部依赖失败需要特定处理？
+
+不要写测试代码，先给我测试场景列表。"
+```
+
+**基于行为而不是实现写测试：**
+
+```bash
+# 坏：测实现细节
+claude "为 getUserByID 写测试，测试它调用了 db.QueryRow"
+
+# 好：测行为
+claude "为 getUserByID 写测试：
+- 用户存在时，返回完整用户信息
+- 用户不存在时，返回 ErrNotFound
+- 数据库连接失败时，返回 ErrDatabase
+- 用户 ID 为负数时，返回 ErrInvalidInput
+
+用表格驱动测试风格，不要 mock 数据库——用测试数据库。"
+```
+
+**生成测试骨架，让你填充业务规则：**
+
+```bash
+claude "为 payment_test.go 生成测试骨架：
+- 测试函数的结构和命名
+- setup/teardown 的框架
+- 测试数据的占位符（用注释标注需要填什么）
+- 核心断言的位置（用 TODO 标注具体条件）
+
+我来填充具体的业务规则，你来给结构。"
+```
+
+**表格驱动测试的生成：**
+
+```go
+// Claude 生成的表格驱动测试示例
+func TestValidatePaymentAmount(t *testing.T) {
+    tests := []struct {
+        name    string
+        amount  float64
+        want    error
+    }{
+        {"正常金额", 100.0, nil},
+        {"最小金额", 0.01, nil},
+        {"零金额", 0.0, ErrInvalidAmount},
+        {"负金额", -1.0, ErrInvalidAmount},
+        {"超过上限", 1000001.0, ErrAmountTooLarge},
+        {"超过精度", 1.001, ErrInvalidPrecision},
+    }
+    
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got := validatePaymentAmount(tt.amount)
+            assert.Equal(t, tt.want, got)
+        })
+    }
+}
+```
+
+**Integration test vs Unit test 的判断：**
+
+```bash
+claude "分析 src/services/ 里的这些函数，
+判断哪些应该用 unit test，哪些需要 integration test：
+
+判断标准：
+- 依赖外部系统（DB、Redis、HTTP）→ 需要集成测试
+- 纯业务逻辑 → 单元测试足够
+- 两者混合 → 建议拆分
+
+输出建议和拆分方案。"
+```
+
+**测试失败时的诊断：**
+
+```bash
+claude "这个测试失败了：
+=== FAIL: TestProcessRefund/when_original_payment_not_found
+panic: runtime error: invalid memory address or nil pointer dereference
+
+相关代码是 refund.go:78。
+这个测试是否测的是真实的业务场景？
+失败原因是代码 bug 还是测试写错了？"
+```
+
+好的测试套件是比文档更可靠的规范。当 Claude 修改代码时，失败的测试是最有效的反馈机制。这是让 Claude 自主工作而不失控的关键保障。

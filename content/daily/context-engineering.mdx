@@ -1,0 +1,114 @@
+---
+title: "Context Engineering：下一个主要的工程能力"
+date: "2026-05-01"
+tags: ["claude-code", "context", "engineering", "advanced"]
+pro: false
+---
+
+Prompt Engineering 已经是基础了。下一个层次是 Context Engineering——不只是你怎么写 prompt，而是你给 AI 提供什么上下文、在什么时机提供、以什么形式提供。
+
+**Context 的三个维度：**
+
+**1. 内容（What）**
+
+什么信息进入 context window？
+
+```
+差：把所有相关文件都塞进去
+好：只提供和当前任务直接相关的信息
+
+差：粘贴整个数据库 schema（50 张表）
+好：只提供涉及的 3 张表的定义
+```
+
+**2. 顺序（Order）**
+
+信息的顺序影响 Claude 的关注点。
+
+```markdown
+# 低效顺序
+背景介绍 → 技术细节 → 你的实际问题
+
+# 高效顺序  
+你的实际问题 → 必要约束 → 相关上下文
+```
+
+"先说你要什么，再说背景"比"铺垫完才说问题"效果好得多。
+
+**3. 时机（When）**
+
+什么时候刷新 context？
+
+```bash
+# 场景：代码库有大量改动后
+
+# 坏：继续在旧 session 里工作（context 里的文件内容已经过时）
+claude "修改 user.go 里的 GetUser 函数"
+
+# 好：开新 session，重新加载
+claude "读 src/user.go，然后修改 GetUser 函数..."
+```
+
+**Context 工程的具体实践：**
+
+**精准注入（Surgical Injection）**
+
+```bash
+# 不好：希望 Claude 自己找到相关文件
+claude "修复支付失败的 bug"
+
+# 好：直接告诉它需要什么
+claude "修复支付失败的 bug。
+相关文件：
+- src/services/payment.go（支付逻辑，重点看 L120-180）
+- src/models/transaction.go（事务状态定义）
+错误日志：$(tail -50 /var/log/payment.log)"
+```
+
+**动态 Context 构建**
+
+```python
+def build_context(task: str, repo_path: str) -> str:
+    """根据任务动态构建最小必要 context"""
+    
+    # 1. 解析任务，找出涉及的实体
+    entities = extract_entities(task)
+    
+    # 2. 只加载相关文件
+    relevant_files = find_relevant_files(entities, repo_path)
+    
+    # 3. 只截取关键部分（不是整个文件）
+    context_chunks = [
+        extract_relevant_section(f, entities)
+        for f in relevant_files
+    ]
+    
+    return "\n\n".join(context_chunks)
+```
+
+**Context 压缩**
+
+当 context 过长，用 Claude 自己来压缩：
+
+```bash
+claude "把这段技术文档（doc.md）压缩成一个简洁的参考卡片，
+保留：接口定义、关键约束、常见用法
+删除：历史背景、详细解释、示例代码以外的内容
+目标长度：原来的 20%"
+```
+
+然后把压缩后的版本放进下一个 session 的 context。
+
+**衡量 Context 效率**
+
+好的 context 的标志：
+- Claude 直接开始解决问题，不问澄清问题
+- 生成的代码符合项目现有风格
+- 不产生不相关的"改进建议"
+
+差的 context 的标志：
+- Claude 反复问"你用的是什么框架？"
+- 生成的代码风格和现有代码不一致
+- 在你没要求的地方做改动
+
+Context Engineering 是 AI 工程化的核心能力，也是区分"用过 Claude"和"真正会用 Claude"的分水岭。
