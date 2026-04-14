@@ -1,0 +1,63 @@
+---
+title: "Claude Code 的记忆问题：为什么它总是忘事"
+date: "2026-04-23"
+tags: ["claude-code", "memory", "sessions", "workflow"]
+pro: false
+---
+
+每次启动新的 Claude Code session，它对之前的对话一无所知。这是架构设计，不是 bug。
+
+**三种信息的存储方式：**
+
+| 类型 | 存储方式 | 跨 session 保留？ |
+|---|---|---|
+| 项目规则/约束 | CLAUDE.md | ✓ 永久 |
+| 当前任务状态 | 对话历史 | ✗ session 结束即消失 |
+| 实现细节/代码 | 代码库本身 | ✓ 通过 git |
+
+**让 Claude "记住"重要信息的正确方式：**
+
+**1. CLAUDE.md 是长期记忆**
+
+不要在对话里说"记住，我们的 API 鉴权是在 header 里用 Bearer token"。
+改成在 CLAUDE.md 里写：
+```markdown
+## API 约定
+- 鉴权：Authorization: Bearer {token}（在 header 里，不是 query param）
+- 错误格式：{ "error": string, "code": number }
+```
+
+**2. 决策写进代码注释**
+
+```go
+// 使用乐观锁而非悲观锁，因为冲突频率低（< 0.1%）
+// 讨论记录：#arch-decisions/2026-02-01
+func UpdateUserProfile(...)
+```
+
+这样 Claude 下次读代码时能看到决策背景。
+
+**3. Session 启动时主动给上下文**
+
+```bash
+# 开始 session 时
+claude "继续上次的工作。上次我们在重构 payment service，
+进展：handler 层已完成，正在做 service 层，还差 repository 层。
+相关文件：src/services/payment.go（已改）, src/repositories/payment.go（待改）"
+```
+
+**4. 用任务文件作为跨 session 状态**
+
+```markdown
+# TASK.md（不要提交到 git）
+## 当前任务：重构 payment
+- [x] handler 层
+- [x] service 层
+- [ ] repository 层
+- [ ] 测试
+
+## 下次 session 开始时告诉 Claude：
+"读 TASK.md，继续未完成的工作"
+```
+
+Claude 的"遗忘"不是缺陷，而是促使你把重要信息外化到代码和文档里。这实际上是一种良性压力——让你把隐性知识显性化。
