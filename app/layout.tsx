@@ -19,8 +19,17 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
   return (
     <html lang="zh">
+      <head>
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Claude Code 工程师手册 RSS"
+          href={`${basePath}/rss.xml`}
+        />
+      </head>
       <body style={{ margin: 0, minHeight: '100vh', background: 'var(--bg)' }}>
         {children}
         <MobileNav />

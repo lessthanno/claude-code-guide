@@ -99,6 +99,7 @@ export default function Sidebar() {
       }}>
         <NavLink href="https://github.com/lessthanno/claude-code-guide" external emoji="⬡">GitHub 开源</NavLink>
         <NavLink href="https://x.com/0xhaoxyz" external emoji="𝕏">关注作者</NavLink>
+        <NavLink href={`${BASE}/rss.xml`} external emoji="📡">RSS 订阅</NavLink>
       </div>
     </aside>
   )
