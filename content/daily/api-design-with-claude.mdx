@@ -1,0 +1,80 @@
+---
+title: "用 Claude Code 设计 API：从模糊需求到 OpenAPI Spec"
+date: "2026-04-25"
+tags: ["claude-code", "api-design", "openapi", "workflow"]
+pro: false
+---
+
+API 设计最难的部分不是写代码，是在代码前做出正确的决策。Claude Code 在这个阶段最有价值。
+
+**第一步：需求澄清**
+
+```bash
+claude "我需要设计一个用户通知系统的 API。
+用户可以设置通知偏好，接收不同渠道（email/push/SMS）的通知。
+帮我列出 5 个在写代码前需要澄清的设计问题。"
+```
+
+Claude 会提出你没想到的问题，比如：
+- 通知的优先级怎么处理？
+- 批量发送和单条发送是同一个接口吗？
+- 通知历史需要查询和分页吗？
+
+**第二步：生成 OpenAPI Spec 草稿**
+
+```bash
+claude "基于以下需求，生成 OpenAPI 3.0 YAML：
+
+用户通知 API：
+- 获取/更新用户通知偏好
+- 发送通知（支持 email/push/SMS 三种渠道）
+- 查询通知历史（支持分页）
+- 标记通知为已读
+
+遵循 RESTful 约定，使用标准 HTTP 状态码，
+包含完整的 schema 定义和示例。"
+```
+
+**第三步：Review 设计决策**
+
+```bash
+claude "review 上面的 API 设计：
+1. 是否有违反 RESTful 原则的地方？
+2. 分页策略是否一致？
+3. 错误响应格式是否统一？
+4. 是否有遗漏的必要字段？
+
+给出具体修改建议，不要重写整个文件。"
+```
+
+**第四步：生成实现骨架**
+
+```bash
+claude "根据这份 OpenAPI spec，生成 Go 的 handler 接口定义：
+- 只生成接口，不生成实现
+- 使用我们项目的错误处理模式（返回 error，不用 panic）
+- handler 参数风格参考 src/handlers/user.go"
+```
+
+**让 Claude 检测设计一致性：**
+
+```bash
+claude "对比 users.yaml 和 notifications.yaml 两个 spec 文件：
+- 命名约定是否一致？
+- 分页参数格式是否相同？
+- 错误响应结构是否统一？
+列出不一致的地方。"
+```
+
+**API 版本迁移：**
+
+```bash
+claude "我们需要在 v2 中把 /users/{id}/notifications 
+改为 /notifications?userId={id}。
+列出：
+1. 需要修改的所有客户端调用点
+2. 向后兼容的迁移方案
+3. 废弃警告应该加在哪里"
+```
+
+最高效的用法是让 Claude 做 API 设计的第一个 reviewer——在你还没写代码时就发现结构问题，比等到实现完再重构省力 10 倍。

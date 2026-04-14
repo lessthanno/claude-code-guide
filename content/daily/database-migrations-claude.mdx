@@ -1,0 +1,76 @@
+---
+title: "Claude Code 与数据库迁移：高风险操作的安全流程"
+date: "2026-04-26"
+tags: ["claude-code", "database", "migrations", "safety"]
+pro: false
+---
+
+数据库迁移是工程里风险最高的操作之一。让 Claude Code 参与，不是让它替你执行，而是让它帮你看清楚自己在做什么。
+
+**让 Claude 分析迁移风险：**
+
+```bash
+claude "分析这个迁移文件 migrations/0042_add_user_status.sql：
+1. 会加锁吗？影响哪些表的读写？
+2. 预计在 1000 万行数据上的执行时间？
+3. 有没有没法回滚的操作？
+4. 对现有查询有什么性能影响？"
+```
+
+**生成安全的迁移脚本：**
+
+```bash
+claude "我需要给 users 表加一个 status 字段（enum: active/inactive/banned），
+默认值 active，NOT NULL。
+表有 800 万行数据，生产环境 PostgreSQL 15。
+生成一个零停机的迁移策略。"
+```
+
+Claude 会建议你用多步迁移：
+
+```sql
+-- Step 1: 加字段，允许 NULL（不加锁）
+ALTER TABLE users ADD COLUMN status VARCHAR(20);
+
+-- Step 2: 后台填充数据（分批，避免锁）
+UPDATE users SET status = 'active' 
+WHERE status IS NULL AND id BETWEEN $1 AND $2;
+
+-- Step 3: 验证填充完成后，再加约束
+ALTER TABLE users ALTER COLUMN status SET NOT NULL;
+ALTER TABLE users ALTER COLUMN status SET DEFAULT 'active';
+```
+
+**生成回滚脚本：**
+
+```bash
+claude "为上面的迁移生成对应的 down 迁移脚本，
+并说明每个 down 步骤的风险。"
+```
+
+**审查现有迁移文件：**
+
+```bash
+claude "审查 migrations/ 目录里最近 10 个迁移文件：
+1. 哪些有潜在的性能问题（大表全表扫描、锁等）
+2. 哪些缺少 down 迁移
+3. 哪些在 CI 里跑了但在生产会有不同行为
+列出需要关注的文件和具体位置。"
+```
+
+**迁移前的 checklist：**
+
+```bash
+claude "我要在明天执行 migration 0042。
+基于代码库检查：
+1. 是否有依赖这个表的活跃查询会受影响？
+2. 索引策略是否合理？
+3. 是否需要在 migration 前/后更新应用代码？
+4. 给我一个 30 分钟执行窗口的操作流程"
+```
+
+**最重要的原则：**
+
+永远不要让 Claude 直接执行迁移。Claude 帮你写、帮你审查、帮你准备——但 `psql -f migration.sql` 这个命令必须由你执行，在你完整理解脚本内容之后。
+
+这不是对 Claude 的不信任，而是对生产数据的尊重。

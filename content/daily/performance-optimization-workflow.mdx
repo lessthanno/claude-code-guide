@@ -1,0 +1,86 @@
+---
+title: "性能优化工作流：先测量，再让 Claude 分析，最后改代码"
+date: "2026-04-26"
+tags: ["claude-code", "performance", "profiling", "workflow"]
+pro: false
+---
+
+性能优化最大的陷阱是直觉驱动。"这里用了反射，肯定慢"——未必。先测量，再分析，再优化。Claude Code 在分析阶段最有价值。
+
+**第一步：给 Claude 真实的性能数据**
+
+```bash
+# 先收集 profile 数据
+go test -bench=. -cpuprofile=cpu.prof ./...
+go tool pprof -text cpu.prof > profile.txt
+
+# 然后让 Claude 分析
+claude "分析这份 Go CPU profile（profile.txt），
+找出占用超过 5% CPU 的热点函数，
+并解释可能的原因。"
+```
+
+**第二步：让 Claude 分析慢查询**
+
+```bash
+# 导出慢查询日志
+claude "分析这份 PostgreSQL 慢查询日志（slow_queries.log），
+找出：
+1. 出现频率最高的查询模式
+2. 扫描行数和返回行数比例异常的查询（可能缺索引）
+3. 同一数据被查询多次的 N+1 模式
+
+不要直接给优化方案，先列出问题清单。"
+```
+
+**第三步：针对性优化**
+
+```bash
+claude "这是 getUserWithOrders 函数（user.go:145-180），
+profile 显示它占了 40% 的 API 响应时间。
+分析可能的瓶颈，给出 2-3 个优化方案，
+按实现难度排序，标注每个方案的预期收益。"
+```
+
+**第四步：验证优化效果**
+
+```bash
+# 优化前后的基准测试
+claude "为 getUserWithOrders 写一个 Go benchmark，
+覆盖：
+- 单用户（有 5 个订单）
+- 单用户（有 100 个订单）
+- 并发 50 个请求
+
+使用 testdata/benchmark_users.json 里的测试数据。"
+```
+
+**识别常见模式：**
+
+```bash
+claude "扫描 src/handlers/ 目录，找出：
+1. 循环内的数据库查询（N+1 问题）
+2. 没有设置超时的 HTTP 客户端调用
+3. 可能导致 GC 压力的大对象分配（切片扩容、大结构体值传递）
+
+列出文件名和行号，不要修改代码。"
+```
+
+**内存问题分析：**
+
+```bash
+# 收集内存 profile
+curl -s http://localhost:6060/debug/pprof/heap > heap.prof
+go tool pprof -text heap.prof > heap.txt
+
+claude "分析这份 Go heap profile。
+我们的服务每小时内存增长约 200MB 但不释放。
+找出可能的内存泄漏点，特别关注：
+- goroutine 泄漏（channel 阻塞）
+- 全局变量持有的引用
+- 闭包捕获的大对象"
+```
+
+**原则：优化只在有数据支撑时才有意义**
+
+Claude 能帮你快速分析 profile，但无法替你决定"这个性能够不够好"。性能目标要来自业务需求（SLA），不是来自直觉或对比。
