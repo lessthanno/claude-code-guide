@@ -1,0 +1,94 @@
+---
+title: "Next.js 项目里用 Claude Code：App Router 时代的最佳实践"
+date: "2026-05-04"
+tags: ["claude-code", "nextjs", "react", "frontend", "workflow"]
+pro: false
+---
+
+前端项目用 Claude Code 有特定的挑战：框架版本变化快、client/server 边界容易搞错、CSS 模块复杂。以下是在 Next.js App Router 项目里最有效的使用方式。
+
+**让 Claude 了解你的 Next.js 版本：**
+
+```bash
+# 先让 Claude 了解环境
+claude "我们用 Next.js $(cat package.json | grep next | head -1)，
+App Router 架构。
+接下来的修改需要遵循：
+1. Server Component 优先（不用 'use client' 除非必要）
+2. 数据获取在 Server Component 里做
+3. 客户端交互用 Client Component 封装
+
+之后我会给你修改任务。"
+```
+
+**常见的 App Router 错误预防：**
+
+```bash
+claude "在 app/ 目录里找出所有：
+1. 不必要地标注了 'use client' 的组件（没有用 useState/useEffect/事件处理）
+2. 在 Client Component 里直接调用数据库或文件系统的代码
+3. 把大型依赖引入了客户端 bundle
+
+列出文件和问题原因。"
+```
+
+**Server Action 的生成：**
+
+```bash
+claude "为用户表单（components/UserForm.tsx）添加 Server Action：
+- 表单提交触发 Server Action
+- Server Action 在服务端验证数据，存入数据库
+- 错误信息通过 useFormState 传回客户端
+- 成功后使用 revalidatePath 更新缓存
+
+参考现有的 actions/order.ts 文件的风格。"
+```
+
+**Route Handler 生成：**
+
+```bash
+claude "创建 app/api/notifications/route.ts：
+- GET：返回当前用户的通知列表（需要认证）
+- POST：标记通知为已读（接收通知 ID 数组）
+- 用我们的标准错误格式（参考 app/api/users/route.ts）
+- 加 rate limiting（参考现有的 middleware.ts）"
+```
+
+**Metadata 和 SEO：**
+
+```bash
+claude "为 app/products/[slug]/page.tsx 添加完整的 Metadata：
+- generateMetadata 函数从数据库获取产品信息
+- 包含 OpenGraph 和 Twitter Card
+- 图片用 /api/og 动态生成
+- 参考 app/blog/[slug]/page.tsx 的实现风格"
+```
+
+**性能优化：**
+
+```bash
+claude "分析 app/ 目录的组件，找出可以优化的地方：
+1. 可以转为 Suspense + loading.tsx 的数据获取
+2. 可以用 dynamic() 懒加载的重型组件
+3. 图片没有用 next/image 的地方
+4. 字体没有用 next/font 的地方
+
+给出文件列表和具体改法。"
+```
+
+**测试 Next.js 组件：**
+
+```bash
+claude "为 components/ProductCard.tsx 写测试：
+- 用 @testing-library/react
+- 测试正常渲染
+- 测试 loading 状态
+- 测试错误状态
+- 测试用户交互（加入购物车按钮）
+
+不要 mock 不必要的东西。如果组件需要 Provider，用 test-utils.tsx 里的 wrapper。"
+```
+
+**最重要的 App Router 认知：**
+
+告诉 Claude "这是 App Router 项目"还不够——要告诉它你用的具体版本，因为 Next.js 每个版本都有 breaking changes，Claude 的训练数据不一定包含最新的 API。遇到不确定的 API，先查 `node_modules/next/dist/` 里的实际代码，不要依赖 Claude 的记忆。
