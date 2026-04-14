@@ -98,6 +98,29 @@ pro: false
         <li>有双向依赖 → 这不是两个任务，而是一个任务，合并</li>
       </ul>
     </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>Multi-agent 任务拆解规则</span>
+      </div>
+<pre><span class="cm">## Multi-agent 任务拆解（傅里叶正交原则）
+
+### 并行前必须通过正交测试
+- 修改任务 A 的输入或实现，任务 B 的逻辑需要改变吗？
+- 需要 → 不正交 → 必须串行
+- 不需要 → 正交 → 可以并行
+
+### 三类依赖关系
+- 无依赖 → 第一批并行执行
+- 单向依赖 → 拓扑排序，分批执行
+- 双向依赖 → 不是两个任务，合并为一个
+
+### 禁止
+- 用 Promise.all 包所有 agent 就叫"并行"
+- 忽视 agent 之间的隐性数据依赖（一个输出影响另一个质量）</span></pre>
+    </div>
   </div>
 
   <!-- ===== 03 相变 ===== -->

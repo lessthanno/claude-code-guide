@@ -606,6 +606,34 @@ T 低 → P 小 → 几乎只接受更好的解 → 精细微调</div>
         <li>判断标准：同一类型的变动已经连续 3 次没有提升 → 升温，换变动类型</li>
       </ul>
     </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>Prompt 调优协议</span>
+      </div>
+<pre><span class="cm">## Prompt 调优协议（模拟退火模式）
+
+### 当前处于哪个阶段？
+- 高温期：新任务、新场景、效果还差。此时大改，不计较单次变差。
+- 低温期：效果已经 7+/10，微调收敛。此时小改，不接受退步。
+
+### 升温触发条件（任意一条）
+- 同类改法连续 3 次无效
+- 被同一个问题卡超过 2 天
+- 输出得分长期在 6-7 震荡，无法突破
+
+### 高温期允许的动作
+- 完全换掉 persona / role 设定
+- 增删整个 example 段落
+- 改变输出格式（JSON vs Markdown vs 纯文本）
+- 换 task framing（从"生成"改成"检查"）
+
+### 低温期禁止的动作
+- 同时改超过 2 处
+- 接受比上一版得分低的版本</span></pre>
+    </div>
   </div>
 
   <!-- ===== 02 傅里叶分解 ===== -->
@@ -696,6 +724,29 @@ T 低 → P 小 → 几乎只接受更好的解 → 精细微调</div>
         <li>有单向依赖的任务 → 拓扑排序，分批执行</li>
         <li>有双向依赖 → 这不是两个任务，而是一个任务，合并</li>
       </ul>
+    </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>Multi-agent 任务拆解规则</span>
+      </div>
+<pre><span class="cm">## Multi-agent 任务拆解（傅里叶正交原则）
+
+### 并行前必须通过正交测试
+- 修改任务 A 的输入或实现，任务 B 的逻辑需要改变吗？
+- 需要 → 不正交 → 必须串行
+- 不需要 → 正交 → 可以并行
+
+### 三类依赖关系
+- 无依赖 → 第一批并行执行
+- 单向依赖 → 拓扑排序，分批执行
+- 双向依赖 → 不是两个任务，合并为一个
+
+### 禁止
+- 用 Promise.all 包所有 agent 就叫"并行"
+- 忽视 agent 之间的隐性数据依赖（一个输出影响另一个质量）</span></pre>
     </div>
   </div>
 
@@ -805,6 +856,29 @@ Agent 系统在某个临界点发生质变，不是线性退化
     <div class="callout callout-warn">
       <strong>⚠ 反模式</strong>
       发现 10 个 agent 开始变慢，加到 12 个试试。这是线性外推思维。相变之后增加更多只会加剧问题，因为协调成本是 O(n²) 的。
+    </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>系统临界点约束</span>
+      </div>
+<pre><span class="cm">## System 临界点管理（相变原则）
+
+### 已知的 Claude Code 相变点（设为硬限制）
+- Context 长度：超过 60% 窗口上限开始压缩，到 80% 必须截断
+- Prompt 规则数：不超过 15 条，超出则拆分为子 agent
+- Retry 次数：最多 3 次，超出换策略而不是继续重试
+- 并发 Agent 数：超过 5 个必须分组，不能扁平并发
+
+### 设置方式：硬限制，不是软警告
+- 不是"快到了提示一下"，是"到了就截断/拒绝/换策略"
+- 限制值 = 实测相变点 × 0.75（留安全边际）
+
+### 禁止线性外推
+- "再加几个 agent 应该没问题" → 协调成本是 O(n²)
+- "context 再长一点应该还好" → 相变是突然发生的，不是线性的</span></pre>
     </div>
   </div>
 
@@ -917,6 +991,27 @@ Kd·de   = D 项：误差变化速度 → 预判式修正</div>
         <li>Kd 太高：对趋势过于敏感，还没到问题就开始重构</li>
         <li>推荐起点：Kp=0.5, Ki=0.1, Kd=0.3，根据实际震荡情况调整</li>
       </ul>
+    </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>Agent 质量反馈规则</span>
+      </div>
+<pre><span class="cm">## Agent 输出质量反馈（PID 模式）
+
+### P 项（当前误差）— 立即修正
+- 单次输出明显偏差时：在下一条消息里直接指出，让 Claude 重做这一步
+- 不要积累问题，当场纠正
+
+### I 项（历史积累）— 系统性修正
+- 如果同类问题出现 3 次以上：更新本文件的相关规则
+- 触发信号：反复提醒同一件事 → 说明 system prompt 有结构性漏洞
+
+### D 项（变化趋势）— 预判式修正
+- 输出质量在变差但还没崩溃时：主动重新描述任务背景和约束
+- 不要等到质量已经很差再修正，提前干预成本最低</span></pre>
     </div>
   </div>
 
@@ -1034,6 +1129,33 @@ LLM 输出：不可完全控制单次输出，但可以定义"不可能区域"
     <div class="callout callout-tip">
       <strong>✓ 核心洞见</strong>
       你无法复现某次完美输出，但你可以让"差的输出"无处出现。设计吸引域比复现单次输出更实用。
+    </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>System Prompt 边界设计</span>
+      </div>
+<pre><span class="cm">## System Prompt 结构（吸引域三层模板）
+
+### 第一层：引力中心（写在 prompt 里，不做硬检查）
+- 目标语气/风格方向
+- 好的输出"看起来像什么"
+
+### 第二层：排斥边界（硬约束，程序化检查 or 明确列出）
+- 禁止词汇：[根据业务填写，如"赋能/生态/赋权"]
+- 禁止格式：超过 N 个 emoji，超过 X 字
+- 禁止内容：具体数字承诺、竞品名称
+
+### 第三层：自由区间（故意留白，不规定）
+- 开头方式：自由
+- 句子数量：够清晰就行
+- 角度选择：选最有趣的
+
+### 禁止
+- 超过 15 条规则的 system prompt（触发相变）
+- "必须出现什么"比"绝对不出现什么"更多</span></pre>
     </div>
   </div>
 
@@ -1161,6 +1283,32 @@ LLM 输出：不可完全控制单次输出，但可以定义"不可能区域"
         <li>加负面示例（"不要像这样..."）</li>
       </ul>
     </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>Prompt 质量诊断规则</span>
+      </div>
+<pre><span class="cm">## Prompt 质量诊断（香农熵方法）
+
+### 诊断信号（不需要代码，脑内判断）
+- 同一 prompt 跑 3 次，结构都不一样 → 极高熵，需要重写
+- 结构相同但内容切角差异大 → 高熵，加 few-shot examples
+- 细节略有不同，结构一致 → 正常，可接受
+- 几乎完全相同 → 低熵，如需多样性则放松约束
+
+### 降熵工具（按效果排序）
+1. 指定输出格式（JSON / 固定段落结构）
+2. 加 2-3 个 few-shot examples（最有效）
+3. 指定输出长度范围（字数上限）
+4. 指定视角/角色
+
+### 触发降熵操作的条件
+- 同一 prompt 连续 3 次输出质量差异超过 30%
+- 输出语言不稳定（时中时英）
+- 每次结构都需要人工调整</span></pre>
+    </div>
   </div>
 
   <!-- ===== 07 帕累托 ===== -->
@@ -1196,8 +1344,8 @@ LLM 输出：不可完全控制单次输出，但可以定义"不可能区域"
       </div>
 <pre><span class="cm">// 三条产品线的帕累托配置</span>
 <span class="kw">const</span> paretoConfigs = {
-  <span class="cm">// FujiPay 支付确认：速度 > 质量 > 成本</span>
-  <span class="str">'fujipay-confirm'</span>: {
+  <span class="cm">// 支付确认：速度 > 质量 > 成本</span>
+  <span class="str">'payment-confirm'</span>: {
     model: <span class="str">'claude-haiku-4-5'</span>,
     concurrency: <span class="num">10</span>,
     maxRetries: <span class="num">1</span>,          <span class="cm">// 宁可失败，不能超时</span>
@@ -1216,8 +1364,8 @@ LLM 输出：不可完全控制单次输出，但可以定义"不可能区域"
     tradeoff: <span class="str">'speed=4, quality=9, cost=5'</span>,
   },
   
-  <span class="cm">// UXLINK 数据分析：成本 > 质量 > 速度</span>
-  <span class="str">'uxlink-analytics'</span>: {
+  <span class="cm">// 数据分析：成本 > 质量 > 速度</span>
+  <span class="str">'data-analytics'</span>: {
     model: <span class="str">'claude-haiku-4-5'</span>,
     concurrency: <span class="num">1</span>,          <span class="cm">// 串行，省 token</span>
     maxRetries: <span class="num">2</span>,
@@ -1264,6 +1412,29 @@ LLM 输出：不可完全控制单次输出，但可以定义"不可能区域"
     <div class="callout callout-warn">
       <strong>⚠ 反模式</strong>
       给同一个 agent 设置"又快又好又便宜"的目标，然后不停调参试图同时提升三个维度。这违反了帕累托定理。正确做法是先决定"什么最重要"，再接受另外两个维度的牺牲。
+    </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>架构决策约束</span>
+      </div>
+<pre><span class="cm">## 架构决策原则（帕累托约束）
+
+### 本项目的优先级（按顺序）
+1. 正确性 > 速度 > 成本
+   - 宁可慢，不要错
+   - 宁可贵，不要用户不信任
+
+### 禁止"同时优化三个维度"
+- 每次架构讨论必须明确：这次牺牲哪个
+- 如果有方案声称"全都能优化"，必须质疑
+
+### agent 配置时的 tradeoff 模板
+- 高质量场景（对外输出）：quality first，允许慢 3x、贵 5x
+- 高频内部场景（数据处理）：speed first，允许质量 -20%
+- 实验/原型阶段：cost first，允许不稳定</span></pre>
     </div>
   </div>
 

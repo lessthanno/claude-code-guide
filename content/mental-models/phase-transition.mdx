@@ -116,6 +116,29 @@ Agent 系统在某个临界点发生质变，不是线性退化
       <strong>⚠ 反模式</strong>
       发现 10 个 agent 开始变慢，加到 12 个试试。这是线性外推思维。相变之后增加更多只会加剧问题，因为协调成本是 O(n²) 的。
     </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>系统临界点约束</span>
+      </div>
+<pre><span class="cm">## System 临界点管理（相变原则）
+
+### 已知的 Claude Code 相变点（设为硬限制）
+- Context 长度：超过 60% 窗口上限开始压缩，到 80% 必须截断
+- Prompt 规则数：不超过 15 条，超出则拆分为子 agent
+- Retry 次数：最多 3 次，超出换策略而不是继续重试
+- 并发 Agent 数：超过 5 个必须分组，不能扁平并发
+
+### 设置方式：硬限制，不是软警告
+- 不是"快到了提示一下"，是"到了就截断/拒绝/换策略"
+- 限制值 = 实测相变点 × 0.75（留安全边际）
+
+### 禁止线性外推
+- "再加几个 agent 应该没问题" → 协调成本是 O(n²)
+- "context 再长一点应该还好" → 相变是突然发生的，不是线性的</span></pre>
+    </div>
   </div>
 
   <!-- ===== 04 PID ===== -->

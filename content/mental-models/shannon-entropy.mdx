@@ -133,6 +133,32 @@ pro: false
         <li>加负面示例（"不要像这样..."）</li>
       </ul>
     </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>Prompt 质量诊断规则</span>
+      </div>
+<pre><span class="cm">## Prompt 质量诊断（香农熵方法）
+
+### 诊断信号（不需要代码，脑内判断）
+- 同一 prompt 跑 3 次，结构都不一样 → 极高熵，需要重写
+- 结构相同但内容切角差异大 → 高熵，加 few-shot examples
+- 细节略有不同，结构一致 → 正常，可接受
+- 几乎完全相同 → 低熵，如需多样性则放松约束
+
+### 降熵工具（按效果排序）
+1. 指定输出格式（JSON / 固定段落结构）
+2. 加 2-3 个 few-shot examples（最有效）
+3. 指定输出长度范围（字数上限）
+4. 指定视角/角色
+
+### 触发降熵操作的条件
+- 同一 prompt 连续 3 次输出质量差异超过 30%
+- 输出语言不稳定（时中时英）
+- 每次结构都需要人工调整</span></pre>
+    </div>
   </div>
 
   <!-- ===== 07 帕累托 ===== -->
