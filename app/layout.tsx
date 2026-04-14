@@ -3,8 +3,19 @@ import './globals.css'
 import MobileNav from '@/components/MobileNav'
 
 export const metadata: Metadata = {
-  title: '知识积累 · 工程师社群',
-  description: '工程实践中的思考与沉淀 — 思维模型、实战模板、AI 编程、每日动态',
+  title: 'Claude Code 工程师手册 · 用物理与控制论理解 AI 编程',
+  description: '用模拟退火、PID 控制器、傅里叶分解等跨学科思维模型，系统掌握 Claude Code 工程实践。每天一条工程思考。',
+  openGraph: {
+    title: 'Claude Code 工程师手册',
+    description: '跨学科思维模型 × Claude Code 实战。用物理、信息论、控制论的视角理解 AI 编程。',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Claude Code 工程师手册',
+    description: '跨学科思维模型 × Claude Code 实战。每天一条工程思考。',
+  },
+  keywords: ['Claude Code', 'AI 编程', '工程师', '心智模型', 'Prompt 调优', 'Multi-agent', 'CLAUDE.md'],
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
