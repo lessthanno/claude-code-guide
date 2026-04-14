@@ -1,0 +1,55 @@
+---
+title: "Claude Code Hooks：让 AI 操作触发你的自定义脚本"
+date: "2026-04-15"
+tags: ["claude-code", "hooks", "自动化"]
+pro: false
+---
+
+Claude Code 有一个容易被忽视的功能：**Hooks**。
+
+它的逻辑很简单：当 Claude 准备执行某个操作时（比如写文件、运行命令），你可以在之前或之后自动触发一段脚本。
+
+**实际用途：**
+
+比如你不想让 Claude 直接提交代码，想先过一遍 lint：
+
+```json
+// .claude/settings.json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "npm run lint --silent || echo 'LINT FAILED: review before commit'"
+        }]
+      }
+    ]
+  }
+}
+```
+
+或者每次 Claude 写完文件，自动记录到日志：
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [{
+      "matcher": "Write",
+      "hooks": [{
+        "type": "command",
+        "command": "echo \"[$(date)] Claude wrote: $CLAUDE_TOOL_INPUT_FILE_PATH\" >> .claude/activity.log"
+      }]
+    }]
+  }
+}
+```
+
+**核心场景：**
+
+- `PreToolUse` — 在操作前加检查（lint、权限校验）
+- `PostToolUse` — 在操作后做记录（日志、通知）
+- `Stop` — Claude 完成任务后触发（发 Slack 通知、跑测试）
+
+Hooks 是把 Claude Code 接入已有工程工作流的关键入口。
