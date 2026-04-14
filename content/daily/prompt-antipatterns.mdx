@@ -1,0 +1,107 @@
+---
+title: "Prompt 反模式：这 7 种写法会让 Claude 给出糟糕的结果"
+date: "2026-04-30"
+tags: ["claude-code", "prompting", "antipatterns", "tips"]
+pro: false
+---
+
+用 Claude Code 用了一段时间后，大多数人卡在同一批问题上。不是 Claude 不够聪明，是这些写法在根本上就难以得到好结果。
+
+**反模式 1：指定方案而不是描述问题**
+
+```bash
+# 坏：
+claude "用 Redis 实现一个分布式锁"
+
+# 好：
+claude "我有一个定时任务，可能在多台机器上同时运行，
+需要确保同一时间只有一个实例在跑。
+推荐方案，并给出实现代码。"
+```
+
+第一种方式锁定了方案，Claude 只能照做。第二种方式让 Claude 先判断 Redis 是否是最合适的，有时它会给出更好的替代方案。
+
+**反模式 2：提示词太模糊**
+
+```bash
+# 坏：
+claude "优化这段代码"
+
+# 好：
+claude "这段代码（user.go:45-90）在压测时内存占用持续增长。
+优化方向：减少内存分配。
+不要改变函数签名，不要引入新的依赖。"
+```
+
+"优化"是一个目标，不是一个任务。优化什么？用什么约束？给的信息越具体，结果越有针对性。
+
+**反模式 3：一次塞太多任务**
+
+```bash
+# 坏：
+claude "重构 payment.go，加上完整的错误处理，
+写测试，更新 API 文档，检查安全问题"
+
+# 好：
+# 分成 4 次独立对话
+claude "只重构 payment.go 的错误处理部分"
+```
+
+多任务对话让 Claude 在任务之间分散注意力，每个任务都做得不彻底。
+
+**反模式 4：缺少约束条件**
+
+```bash
+# 坏：
+claude "设计一个缓存方案"
+
+# 好：
+claude "设计一个缓存方案：
+- 数据量：1000 万条记录，每条约 2KB
+- 读写比：10:1
+- 一致性要求：允许 5 秒的最终一致性
+- 现有基础设施：Redis 6，不能加新服务
+- 预算：不超过现在的 2 倍成本"
+```
+
+没有约束的问题没有好答案——任何方案都是合理的，因此 Claude 会给出最"教科书式"的通用方案。
+
+**反模式 5：要 Claude 猜测你的意图**
+
+```bash
+# 坏：
+claude "这段代码有问题吗？"（没有说明什么场景）
+
+# 好：
+claude "这段代码会在高并发场景下（1000 QPS）出现竞争条件吗？
+特别关注 counter 变量的读写。"
+```
+
+**反模式 6：把错误信息当上下文**
+
+```bash
+# 坏：
+claude "报错了：null pointer exception"
+
+# 好：
+claude "运行 go test ./... 时出错，完整错误：
+panic: runtime error: invalid memory address or nil pointer dereference
+goroutine 1 [running]:
+main.getUserByID(...)
+    /Users/me/project/user.go:45
+
+user.go:45 的代码是：return u.Profile.Name
+u 是从 findUser() 返回的，findUser 在没找到记录时返回 nil。"
+```
+
+**反模式 7：接受第一个答案**
+
+Claude 的第一个回答不一定是最好的。如果结果不理想，追问：
+
+```bash
+claude "这个方案有什么潜在问题？"
+claude "有没有更简单的实现方式？"
+claude "如果数据量增长 10 倍，这个方案还成立吗？"
+```
+
+与 Claude 对话是迭代过程，不是一次性查询。
