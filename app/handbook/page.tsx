@@ -3,6 +3,7 @@ import path from 'path'
 import Link from 'next/link'
 import Sidebar from '@/components/Sidebar'
 import { MobileMenuButton } from '@/components/MobileDrawer'
+import HandbookContent from '@/components/HandbookContent'
 
 const CHAPTERS = [
   { id: 'sa',        num: '01', name: '模拟退火',   domain: 'Prompt 调优',      tag: 'tag-phys', label: '物理' },
@@ -41,10 +42,7 @@ export default function HandbookPage() {
         <div className="layout-row">
           {/* Main content */}
           <main className="article-main" style={{ maxWidth: '860px' }}>
-            <div
-              className="handbook-body"
-              dangerouslySetInnerHTML={{ __html: content }}
-            />
+            <HandbookContent html={content} />
           </main>
 
           {/* Chapter TOC */}

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import Sidebar from '@/components/Sidebar'
 import { MobileMenuButton } from '@/components/MobileDrawer'
 import { getPost, getChannelPosts, CHANNEL_META, Channel } from '@/lib/content'
+import HandbookContent from '@/components/HandbookContent'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 
@@ -131,9 +132,9 @@ export default async function PostPage({
             </div>
 
             {/* Content — rendered as HTML from MDX */}
-            <div
+            <HandbookContent
+              html={post.content}
               className="prose"
-              dangerouslySetInnerHTML={{ __html: post.content }}
               style={{ marginBottom: '48px' }}
             />
 
