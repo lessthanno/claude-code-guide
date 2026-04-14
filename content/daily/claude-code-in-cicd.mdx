@@ -1,0 +1,72 @@
+---
+title: "Claude Code 接入 CI/CD：让 PR 自动得到 AI 审查"
+date: "2026-04-21"
+tags: ["claude-code", "cicd", "automation", "github-actions"]
+pro: false
+---
+
+把 Claude Code 接入 GitHub Actions，让每个 PR 都能自动得到初步的 AI 审查。
+
+**基础 PR 审查 Workflow：**
+
+```yaml
+# .github/workflows/ai-review.yml
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: AI Review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # 获取 PR 改动
+          DIFF=$(git diff origin/main...HEAD)
+
+          # 调用 Claude API
+          REVIEW=$(curl -s https://api.anthropic.com/v1/messages \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            -d "{
+              \"model\": \"claude-haiku-4-5-20251001\",
+              \"max_tokens\": 1024,
+              \"messages\": [{
+                \"role\": \"user\",
+                \"content\": \"审查以下代码改动，只报告 critical 和 major 问题，每个问题一行，格式：[严重程度] 文件名:行号 - 问题描述。没有问题时只输出 LGTM。\\n\\n${DIFF}\"
+              }]
+            }" | jq -r '.content[0].text')
+
+          echo "$REVIEW"
+
+          # 如果有 critical 问题，让 CI 失败
+          echo "$REVIEW" | grep -q "\\[critical\\]" && exit 1 || exit 0
+```
+
+**注意事项：**
+
+1. **用 Haiku 而不是 Sonnet/Opus** — 审查是高频操作，Haiku 足够且便宜很多
+2. **限制 diff 大小** — 超过 4000 行的 diff 效果很差，要分批处理
+3. **只关注关键问题** — 让 AI 只报 critical/major，minor 留给人工
+4. **缓存审查结果** — 同一 commit 不要重复审查
+
+**更实用的方案：只审查特定目录**
+
+```yaml
+- name: Selective Review
+  run: |
+    # 只审查 /src/api/ 目录的改动
+    git diff origin/main...HEAD -- 'src/api/*.go' | \
+      claude "审查这些 API 改动的安全性"
+```
+
+CI 里的 AI 审查不是要完全替代人工，而是在代码进入代码库之前自动拦截明显问题。把 Claude 当成你团队里最快但最机械的审查员——它永远不会累，但判断力需要你来把关。

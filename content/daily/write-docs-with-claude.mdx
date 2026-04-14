@@ -1,0 +1,75 @@
+---
+title: "用 Claude Code 写技术文档：从代码直接生成文档"
+date: "2026-04-21"
+tags: ["claude-code", "documentation", "workflow"]
+pro: false
+---
+
+技术文档是大多数工程师最拖延的工作。Claude Code 可以把这件事的摩擦力降到接近零。
+
+**从代码直接生成 API 文档：**
+
+```bash
+claude "
+从以下代码生成 API 文档，格式为 Markdown。
+
+对于每个公开的函数/接口，包含：
+- 功能说明（一句话）
+- 参数说明（类型、用途、是否必须）
+- 返回值说明
+- 使用示例（1-2 个）
+- 注意事项（如果有）
+
+不要猜测未在代码中体现的行为。
+
+$(cat src/api/payment.go)
+"
+```
+
+**生成 CHANGELOG：**
+
+```bash
+# 从 git log 自动生成 CHANGELOG
+git log --oneline v1.0.0..HEAD | claude "
+根据这些 commit 信息生成 CHANGELOG，分类为：
+- Breaking Changes
+- New Features
+- Bug Fixes
+- Improvements
+
+只用 commit 信息中有的内容，不要猜测。
+"
+```
+
+**生成 README 的关键部分：**
+
+```bash
+claude "
+根据这个代码库的结构生成 README 的'快速开始'部分。
+
+项目结构：$(ls -la)
+依赖：$(cat package.json | jq '.dependencies')
+入口：$(cat src/index.ts | head -50)
+
+要求：
+- 假设读者是熟悉该语言的开发者，不是新手
+- 5 步以内能跑起来
+- 每步给出具体命令，不要模糊描述
+"
+```
+
+**文档质量 Checklist（让 Claude 审查自己写的文档）：**
+
+```bash
+claude "
+审查以下文档，检查：
+1. 每个代码示例是否可以直接运行（不报错）
+2. 是否有没有解释的术语
+3. 步骤是否有遗漏
+4. 是否有过时的信息
+
+$(cat README.md)
+"
+```
+
+最好的文档策略：用 Claude 生成初稿，自己过一遍修正错误和补充背景，然后让 Claude 再润色一次。这比从零开始写快 5-10 倍，比完全依赖 Claude 质量高很多。
