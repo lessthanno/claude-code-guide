@@ -1,0 +1,92 @@
+---
+title: "微服务架构里的 Claude Code：跨服务问题最难"
+date: "2026-05-07"
+tags: ["claude-code", "microservices", "architecture", "distributed-systems"]
+pro: false
+---
+
+单体应用里用 Claude Code 容易——所有代码在一个地方。微服务里，最难的问题恰恰是跨服务的：API 契约变更、分布式追踪、跨服务 bug。
+
+**给 Claude 提供微服务上下文：**
+
+```bash
+# 不要只给单个服务的代码
+claude "我们的架构如下：
+- user-service：用户注册/登录（Go, port 8001）
+- order-service：订单管理（Go, port 8002）
+- payment-service：支付处理（Go, port 8003）
+- notification-service：通知发送（Python, port 8004）
+
+服务间通信：REST API + Kafka 事件
+服务发现：Consul
+链路追踪：Jaeger
+
+现在的问题是：[具体问题]"
+```
+
+**API 契约变更的影响分析：**
+
+```bash
+claude "我需要在 user-service 的 /users/{id} 接口里
+把 created_at 字段从 Unix timestamp 改成 ISO 8601 格式。
+
+帮我找出：
+1. 哪些服务消费了这个接口？（从代码里找调用方）
+2. 哪些服务会受到这个格式变更的影响？
+3. 推荐的迁移策略（双写期、版本化 API 等）
+4. 需要更新的集成测试"
+```
+
+**分布式 bug 的追踪：**
+
+```bash
+claude "这是一个跨服务的 bug 追踪任务。
+Trace ID: abc-123-def
+
+已知的信息：
+- 用户下单后收到支付成功通知，但订单状态没有更新
+- Jaeger trace 显示 payment-service 发出了 payment.completed 事件
+- order-service 的日志里没有找到这个 Trace ID
+
+可能的问题点在哪里？
+给我一个系统性的排查步骤。"
+```
+
+**服务间接口的测试：**
+
+```bash
+claude "为 order-service 调用 payment-service 的接口写契约测试：
+- 使用 Pact（Consumer-Driven Contract Testing）
+- 覆盖：支付成功、支付失败、超时三种情况
+- order-service 是 consumer，payment-service 是 provider
+
+输出消费者端的测试代码和 Pact 文件格式。"
+```
+
+**生成服务间 API 文档：**
+
+```bash
+claude "扫描 user-service、order-service、payment-service 的代码，
+生成服务间调用关系图：
+- 哪个服务调用了哪个服务的哪个接口
+- 哪些是同步 REST 调用，哪些是异步事件
+- 标注关键路径（用户下单到支付完成的主链路）
+
+输出 Mermaid 格式的图表。"
+```
+
+**微服务迁移策略：**
+
+```bash
+claude "我们有一个单体应用，需要把'通知'功能拆成独立服务。
+当前通知逻辑在 monolith/internal/notification/ 。
+
+设计迁移策略：
+1. 如何识别通知功能的边界？
+2. 推荐的拆分时机（什么信号说明可以拆了）？
+3. Strangler Fig 模式在这里怎么应用？
+4. 数据迁移的风险点？
+5. 怎么验证拆分后功能等价？"
+```
+
+微服务里用 Claude Code 的核心原则：**始终提供跨服务的上下文**。告诉它服务边界、通信协议和依赖关系，否则它只能在单个服务里解决问题，而很多真正的问题恰好就发生在边界上。

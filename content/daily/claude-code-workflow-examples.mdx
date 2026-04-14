@@ -1,0 +1,96 @@
+---
+title: "5 个真实的 Claude Code 工作流：从早晨到晚上"
+date: "2026-05-07"
+tags: ["claude-code", "workflow", "examples", "productivity"]
+pro: false
+---
+
+理论够了，看真实场景。以下是 5 个工程师实际使用 Claude Code 的工作流，从早到晚。
+
+**场景 1：早上 — 理解昨晚的代码**
+
+同事昨天 merge 了一个大 PR，你需要在这段代码基础上继续工作：
+
+```bash
+# 不要硬看 diff，先问 Claude
+git diff main..feature/payment-v2 | claude "解释这次 PR 的主要改动：
+1. 解决了什么问题？
+2. 核心的架构改变是什么？
+3. 有哪些地方我接下来修改时需要特别注意？"
+```
+
+**场景 2：上午 — 实现一个新功能**
+
+```bash
+# 1. 先讨论方案
+claude "我需要给 API 加速率限制。
+当前技术栈：Go + Redis。
+需求：每个 API key 每分钟最多 100 次请求。
+有哪些实现方案？推荐哪个？"
+
+# 2. 确定方案后，生成代码
+claude "用 Token Bucket 算法实现速率限制，
+Redis 存储状态，
+写一个 Go 的 middleware：
+- 超限时返回 429，包含 Retry-After header
+- 不同的 endpoint 可以有不同的限制
+- 要有测试"
+
+# 3. Review 生成的代码
+claude "review 你生成的代码：
+1. 并发安全吗？
+2. Redis 挂了会怎样？
+3. 有没有 edge case 没有处理？"
+```
+
+**场景 3：下午 — 调试一个奇怪的 bug**
+
+```bash
+# 提供完整上下文
+claude "生产环境偶现一个 bug，复现率约 0.1%：
+用户支付成功后，订单状态没有更新。
+
+已排查：
+- 支付服务正常记录了成功
+- Kafka 消息已发送（从 Kafka 监控确认）
+- order-service 的 consumer 日志没有错误
+
+相关代码：
+$(cat internal/consumer/payment_consumer.go)
+
+可能的原因是什么？怎么加日志确认？"
+```
+
+**场景 4：傍晚 — 写 PR 的 description**
+
+```bash
+git diff main | claude "为这次 PR 写 description：
+- 标题：50 字以内，用 conventional commit 格式
+- 背景：为什么要做这个改动
+- 方案：核心实现思路
+- 测试：怎么验证
+- 注意事项：reviewer 需要特别关注的点
+
+我们的 PR 模板格式：
+$(cat .github/PULL_REQUEST_TEMPLATE.md)"
+```
+
+**场景 5：晚上 — 知识整理**
+
+```bash
+# 把今天遇到的问题沉淀为文档
+claude "今天我遇到了一个 Go channel 的死锁问题。
+问题描述：[你的描述]
+根因：[你找到的根因]
+解决方案：[你的解法]
+
+帮我把这个整理成一个 ADR（Architecture Decision Record），
+并加到 docs/decisions/ 目录下。
+这样下次遇到类似问题，文档里有记录。"
+```
+
+**一个规律：**
+
+用 Claude Code 效果好的工作流有一个共同特点——你知道你想要什么，Claude 帮你到达那里。
+
+效果差的工作流通常是：你希望 Claude 帮你思考要做什么。那是你的工作，不是 Claude 的。
