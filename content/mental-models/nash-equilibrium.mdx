@@ -1,0 +1,153 @@
+---
+num: "10"
+title: "纳什均衡 · Nash Equilibrium"
+titleEn: "Nash Equilibrium"
+subtitle: "博弈论 · 用于多 Agent 协调协议设计"
+domain: math
+tags: ["multi-agent", "coordination", "architecture"]
+date: "2026-04-16"
+pro: false
+---
+
+
+<div class="concept" id="nash">
+    <div class="concept-header">
+      <div class="concept-num">10</div>
+      <div class="concept-title-block">
+        <h2>纳什均衡 · Nash Equilibrium</h2>
+        <div class="concept-subtitle">博弈论 · 用于多 Agent 协调协议设计</div>
+      </div>
+      <span class="domain-badge tag-math">数学</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心概念</div>
+      <div class="formula">纳什均衡：在给定其他参与者策略的情况下，
+没有任何参与者能通过单方面改变策略来改善自身结果。
+
+多 Agent 系统中：
+- 每个 agent 都有自己的"最优策略"
+- 均衡 = 所有 agent 的策略互相一致、互相强化
+- 非均衡 = 某个 agent 总想"偏离"→ 系统不稳定</div>
+      <div class="formula-note">关键直觉：不是让每个 agent "最优"，而是让系统的均衡点恰好在你想要的地方。</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">为什么多 Agent 系统会失衡</div>
+      <div class="scenario">
+        <div class="scenario-tag">典型场景：囚徒困境</div>
+        <p>Writer agent 想通过审核 → 倾向于写"安全"内容。Reviewer agent 想找到问题 → 倾向于挑剔。结果：writer 越来越保守，reviewer 越来越严苛，最终输出质量反而下降。这是一个"军备竞赛"均衡，不是你想要的均衡。</p>
+      </div>
+      <table class="decision-table">
+        <tr><th>系统设计</th><th>均衡类型</th><th>结果</th></tr>
+        <tr>
+          <td>Reviewer 只评分不解释</td>
+          <td class="signal">对抗均衡</td>
+          <td class="action">Writer 猜测标准 → 质量随机</td>
+        </tr>
+        <tr>
+          <td>Reviewer 给出改进方向</td>
+          <td class="signal">合作均衡</td>
+          <td class="action">Writer 有明确目标 → 质量上升</td>
+        </tr>
+        <tr>
+          <td>共享评分标准 rubric</td>
+          <td class="signal">协调均衡</td>
+          <td class="action">双方对齐 → 系统最优</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — 协调均衡设计</div>
+      <div class="code-header">
+        <span>agent-coordinator.ts</span>
+        <span>多 Agent 协调层</span>
+      </div>
+<pre><span class="cm">// 错误：各 agent 独立定义"成功"标准 → 对抗均衡</span>
+<span class="kw">const</span> writerPrompt = <span class="str">`写一篇高质量文章，要通过审核`</span>
+<span class="kw">const</span> reviewerPrompt = <span class="str">`严格审核文章，找出所有问题`</span>
+<span class="cm">// 结果：writer 写防御性内容，reviewer 挑越来越细的毛病</span>
+
+<span class="cm">// 正确：共享 rubric，建立协调均衡</span>
+<span class="kw">const</span> SHARED_RUBRIC = {
+  clarity:     { weight: <span class="num">0.3</span>, desc: <span class="str">'逻辑清晰，论点有层次'</span> },
+  accuracy:    { weight: <span class="num">0.3</span>, desc: <span class="str">'事实准确，代码可运行'</span> },
+  actionable:  { weight: <span class="num">0.2</span>, desc: <span class="str">'读者可以立即采取行动'</span> },
+  conciseness: { weight: <span class="num">0.2</span>, desc: <span class="str">'没有多余的话'</span> },
+}
+
+<span class="kw">const</span> writerPrompt = <span class="str">`
+  写一篇满足以下标准的文章：
+  ${JSON.stringify(SHARED_RUBRIC)}
+  每个维度目标分：≥7/10
+`</span>
+
+<span class="kw">const</span> reviewerPrompt = <span class="str">`
+  按以下标准评分，给出每个维度的分数和具体改进建议：
+  ${JSON.stringify(SHARED_RUBRIC)}
+  目标：帮助 writer 达到每项 ≥7/10，不是找茬
+`</span>
+
+<span class="cm">// 现在两个 agent 的最优策略指向同一个目标</span>
+
+<span class="kw">async function</span> <span class="fn">coordinatedGeneration</span>(topic: <span class="kw">string</span>) {
+  <span class="kw">let</span> draft = <span class="kw">await</span> writer.<span class="fn">generate</span>(topic, writerPrompt)
+
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < <span class="num">3</span>; i++) {
+    <span class="kw">const</span> review = <span class="kw">await</span> reviewer.<span class="fn">evaluate</span>(draft, reviewerPrompt)
+
+    <span class="cm">// 均衡检查：双方对评分达成共识？</span>
+    <span class="kw">if</span> (review.scores.<span class="fn">every</span>(s => s.score >= <span class="num">7</span>)) <span class="kw">break</span>
+
+    <span class="cm">// 非均衡：writer 根据反馈调整，向均衡点收敛</span>
+    draft = <span class="kw">await</span> writer.<span class="fn">revise</span>(draft, review.feedback)
+  }
+
+  <span class="kw">return</span> draft
+}</pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式</strong>
+      给 critic agent 设置"找到至少 5 个问题才算完成任务"。这会把系统推向对抗均衡——即使内容质量很高，critic 也会捏造问题来完成任务。永远不要用"问题数量"作为 critic 的成功指标。
+    </div>
+
+    <div class="callout callout-tip">
+      <strong>✓ 最佳实践</strong>
+      用"共享 rubric + 收敛判断"代替"writer vs reviewer"对抗结构。让系统的自然均衡点与你的目标对齐，而不是靠强制约束压制对抗行为。
+    </div>
+
+    <div class="quick-ref">
+      <h4>多 Agent 均衡设计检查清单</h4>
+      <ul>
+        <li>所有 agent 是否共享同一套评分标准？</li>
+        <li>某个 agent 的"成功"定义是否与其他 agent 的目标对齐？</li>
+        <li>是否存在 agent 通过"偷懒"或"过激"能单方面获益的情况？</li>
+        <li>系统是否有收敛条件？还是会无限循环？</li>
+        <li>能否用一句话说清楚"系统的纳什均衡状态是什么"？</li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>多 Agent 协调规则</span>
+      </div>
+<pre><span class="cm">## 多 Agent 系统设计规则（纳什均衡原则）
+
+### 共享评分标准
+- 所有参与同一任务的 agent 必须使用相同的 rubric
+- rubric 在系统提示开头声明，所有 agent 都能看到
+
+### 禁止对抗性指标
+- 不允许用"找到问题数量"衡量 critic agent 的效果
+- 不允许用"通过审核率"衡量 writer agent 的效果
+- 只用"最终输出质量"作为整体系统指标
+
+### 收敛条件
+- 每个迭代循环必须有明确的终止条件（分数阈值或最大轮次）
+- 若达到最大轮次仍未收敛，升级为人工介入，不要静默降级</span></pre>
+    </div>
+  </div>
