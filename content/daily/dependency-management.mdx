@@ -1,0 +1,84 @@
+---
+title: "依赖管理：用 Claude Code 让你的技术栈不过时"
+date: "2026-05-11"
+tags: ["claude-code", "dependencies", "security", "maintenance", "devops"]
+pro: false
+---
+
+依赖更新是大多数团队最容易拖延的工作。"现在能用，为什么要升级"——直到某天发现一个关键安全漏洞，被迫紧急升级，然后发现 3 个 breaking change 要处理。Claude Code 可以让依赖更新变成一个低风险的常规操作。
+
+**定期依赖审查：**
+
+```bash
+claude "分析 go.mod（或 package.json），
+找出需要关注的依赖：
+1. 超过 1 年没有更新的核心库（潜在维护风险）
+2. 安全相关的库（crypto、auth、HTTP 客户端）是否在最新大版本
+3. 有没有功能重复的依赖（两个 HTTP 客户端库）
+4. 有没有生命周期终止（deprecated/archived）的依赖
+
+注意：你的知识有截止日期，安全问题需要用 govulncheck/npm audit 验证。"
+```
+
+**升级计划生成：**
+
+```bash
+claude "我需要把 go.sum 里的这 5 个依赖升级：
+[列出依赖和版本]
+
+帮我制定升级计划：
+1. 按风险排序（哪些可能有 breaking change）
+2. 每个升级的验证步骤
+3. 推荐的升级顺序（哪些有依赖关系）
+4. 建议在哪个时机做（不建议在发布前几天）"
+```
+
+**Breaking Change 分析：**
+
+```bash
+claude "我要把 github.com/jackc/pgx 从 v4 升级到 v5。
+这两个版本之间有哪些主要的 breaking change？
+在我们的代码库里：
+1. 哪些文件会受到影响？
+2. 需要做哪些代码修改？
+3. 有没有不推荐但能用的兼容层？
+
+帮我生成一个迁移 checklist。"
+```
+
+**自动化依赖更新的 CI 配置：**
+
+```bash
+claude "生成一个 GitHub Actions workflow：
+- 每周一自动检查并创建依赖更新的 PR
+- 只自动升级 patch 和 minor 版本（major 需要人工审查）
+- PR 要包含：升级内容、changelog 链接、是否有 breaking change 标注
+- 如果测试通过，自动在 PR 上加 label 'auto-approved'
+  （但不自动 merge，留给人工最终确认）"
+```
+
+**依赖替换策略：**
+
+```bash
+claude "我们在用 logrus 做日志，
+但 Go 标准库的 slog（1.21+）现在已经很成熟了。
+帮我评估是否值得迁移：
+1. 功能对比（我们实际用了 logrus 的哪些特性）
+2. 迁移的代码改动量估算
+3. 性能差异（有没有 benchmark 数据）
+4. 推荐的迁移策略（直接替换 vs 双轨并行）"
+```
+
+**防止依赖膨胀：**
+
+```bash
+claude "分析 package.json，找出：
+1. 只被 1-2 个地方使用且功能可以用标准库替代的依赖
+2. 开发依赖意外进入了生产依赖
+3. 功能重叠的依赖（两个都能做 HTTP 请求的库）
+4. 体积超大的依赖（可能有轻量替代方案）
+
+我们的原则：能用标准库的不引入新依赖。"
+```
+
+好的依赖管理不是零依赖，而是清楚地知道每个依赖存在的理由，并且定期评估它是否还值得留着。
