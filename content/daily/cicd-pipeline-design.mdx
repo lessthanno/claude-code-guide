@@ -1,0 +1,144 @@
+---
+title: "CI/CD 流水线设计：用 Claude Code 构建工程化的发布流程"
+date: "2026-05-16"
+tags: ["claude-code", "cicd", "github-actions", "devops", "automation"]
+pro: false
+---
+
+CI/CD 不是"跑一下测试然后部署"，而是**在每次代码变更时，以可重复、可验证的方式，安全地将代码送到生产环境**。Claude Code 帮你设计真正工程化的流水线。
+
+**从需求设计 GitHub Actions 工作流：**
+
+```bash
+claude "帮我设计这个项目的 GitHub Actions CI/CD 流水线：
+
+项目：Go 后端 API + Next.js 前端
+部署目标：AWS EC2（后端）+ Vercel（前端）
+分支策略：
+- main → 生产环境
+- dev → 预发布环境
+- feature/* → 只跑测试
+
+需求：
+1. PR 时：运行测试、lint、类型检查
+2. 合并到 dev：部署到预发布
+3. 合并到 main：部署到生产（需要手动审批）
+4. 失败时发送 Slack 通知
+
+给出完整的 workflow YAML 文件。"
+```
+
+**Go 后端的标准 CI 检查：**
+
+```yaml
+# .github/workflows/go-ci.yml
+name: Go CI
+
+on:
+  pull_request:
+    branches: [main, dev]
+  push:
+    branches: [main, dev]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          
+      - name: Run tests
+        run: go test -race -coverprofile=coverage.out ./...
+        env:
+          DATABASE_URL: postgres://test:test@localhost/testdb
+          
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(go tool cover -func coverage.out | grep total | awk '{print $3}' | tr -d '%')
+          if (( $(echo "$COVERAGE < 70" | bc -l) )); then
+            echo "Coverage $COVERAGE% is below 70% threshold"
+            exit 1
+          fi
+```
+
+**零停机部署策略：**
+
+```bash
+claude "帮我实现 EC2 的零停机部署脚本：
+
+当前部署方式：直接 SSH 进去 kill + restart（有几秒停机）
+
+改进需求：
+1. 蓝绿部署或滚动更新
+2. 新版本启动失败时自动回滚
+3. 部署完成后验证健康检查
+4. 整个过程不超过 2 分钟
+
+我们用 systemd 管理进程，有 nginx 做反向代理。
+
+给出部署脚本 + nginx 配置 + systemd unit 文件。"
+```
+
+**数据库迁移在 CI/CD 中的位置：**
+
+```bash
+claude "数据库迁移应该在 CI/CD 哪个阶段运行？
+
+我们的情况：
+- 用 golang-migrate 管理迁移
+- 部署频率：每天 2-3 次
+- 数据库：PostgreSQL，5 张主要表，500 万行数据
+
+讨论：
+1. 迁移在应用启动前还是独立步骤？
+2. 如何处理迁移失败（不能直接回滚 schema）？
+3. 长时间迁移（分钟级）如何处理 downtime？
+4. 如何确保迁移和代码版本的对应关系？
+
+给出推荐方案和 GitHub Actions 配置。"
+```
+
+**流水线的可观测性：**
+
+```bash
+claude "我的 CI 流水线经常挂，但不知道在哪里慢、在哪里失败。
+帮我给 GitHub Actions 加上可观测性：
+
+1. 每个 job 的耗时 summary（显示在 PR 里）
+2. 测试失败时上传测试报告（JUnit XML）
+3. 构建缓存命中率统计
+4. 部署成功/失败的 Slack 消息（带有 commit 信息和部署时间）
+
+给出具体的 workflow 配置。"
+```
+
+**依赖缓存策略：**
+
+```bash
+claude "我的 CI 每次都要重新下载依赖，Go 的 go mod download 要 90 秒。
+帮我优化缓存策略：
+
+Go 项目：
+- go.sum 文件变化时缓存失效
+- build cache 也要缓存（不只是模块）
+- 在 PR 里要能命中 main 分支的缓存
+
+给出最优的 GitHub Actions cache 配置，
+说明 cache key 的设计思路（restore-keys 的层级策略）。"
+```
+
+CI/CD 的本质是工程信心：**你每次按下部署按钮时，知道什么会发生，为什么会发生，出了问题能快速诊断**。混乱的流水线让部署变成赌博；工程化的流水线让部署变成常规操作。

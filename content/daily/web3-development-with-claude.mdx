@@ -1,0 +1,111 @@
+---
+title: "Web3 开发与 Claude Code：智能合约、DApp 的 AI 辅助工作流"
+date: "2026-05-16"
+tags: ["claude-code", "web3", "solidity", "smart-contract", "blockchain"]
+pro: false
+---
+
+Web3 开发有两个特殊挑战：**智能合约一旦部署无法修改**（bug 可能造成资产损失），以及**链上状态和链下系统的同步**。Claude Code 在这里最大的价值是帮你在部署前发现问题。
+
+**Solidity 合约审查：**
+
+```bash
+cat contracts/Token.sol | claude "审查这个 Solidity 合约：
+1. 常见漏洞检查：
+   - 重入攻击（reentrancy）
+   - 整数溢出（虽然 0.8.x 有内置保护，但检查边界情况）
+   - 访问控制问题（哪些函数应该是 onlyOwner？）
+   - 前端运行（front-running）风险
+2. Gas 优化机会（循环、存储 vs 内存）
+3. 事件是否完整（关键状态变更是否都有 emit）
+4. 升级机制（是否需要代理模式？）
+
+每个问题给出严重级别和修复建议。"
+```
+
+**从需求生成合约结构：**
+
+```bash
+claude "设计一个 NFT 质押合约：
+
+需求：
+- 用户 stake NFT，每天获得 ERC20 代币奖励
+- 支持多种 NFT 合约（可配置奖励倍率）
+- 用户可以随时解除质押
+- 管理员可以暂停合约（紧急情况）
+- 合约可升级（使用 OpenZeppelin 代理模式）
+
+设计：
+1. 数据结构（mapping 设计）
+2. 关键函数签名（stake、unstake、claimReward）
+3. 安全考虑（重入锁、暂停机制）
+4. 使用的 OpenZeppelin 基类
+5. 奖励计算的精度处理（避免精度损失）"
+```
+
+**DApp 前端的链上状态同步：**
+
+```bash
+claude "帮我设计 DApp 前端的链上状态管理：
+
+场景：DEX 前端（交换代币、查看持仓）
+技术：Next.js + ethers.js + wagmi
+
+挑战：
+1. 用户发起交易后，如何知道什么时候更新 UI？
+2. 多个组件依赖相同链上数据，如何避免重复 RPC 请求？
+3. 链重组（chain reorg）时如何处理？
+4. 本地乐观更新（optimistic update）的实现
+
+给出状态管理方案和关键代码模式。"
+```
+
+**测试智能合约：**
+
+```bash
+claude "帮我为这个质押合约写 Hardhat 测试：
+
+测试覆盖：
+1. 正常流程（stake → wait → claim reward → unstake）
+2. 边界条件（stake 0、claim 没有 reward）
+3. 权限控制（非 owner 不能暂停）
+4. 重入攻击模拟（写一个攻击合约，验证防护有效）
+5. 时间相关测试（用 hardhat_increaseTime 模拟时间流逝）
+
+给出完整的测试文件，使用 ethers.js v6 语法。"
+```
+
+**Gas 费用优化：**
+
+```bash
+claude "帮我优化这个合约的 gas 费用：
+[合约代码]
+
+优化方向：
+1. 存储布局优化（变量 packing）
+2. 用 calldata 替换 memory（external 函数参数）
+3. 避免重复的 SLOAD（用局部变量缓存）
+4. 用 mapping 替换数组（O(1) vs O(n)）
+5. 事件替代存储（只读数据用 event 不用 storage）
+
+对每个优化给出 gas 节省估算（用 hardhat-gas-reporter）。"
+```
+
+**链下索引（The Graph）：**
+
+```bash
+claude "帮我为这个 ERC20 代币合约写 The Graph subgraph：
+
+需要索引：
+- 所有 Transfer 事件（from, to, amount）
+- 每个地址的当前余额（聚合）
+- 每日转账量（时间序列）
+
+给出：
+1. schema.graphql 定义
+2. subgraph.yaml 配置
+3. mappings.ts 处理逻辑
+4. 如何查询：某地址的所有转账历史、Top 100 持有者"
+```
+
+Web3 开发的黄金原则：**合约代码比一般代码贵出一个数量级**——不只是审计成本，而是错误的代价。用 Claude Code 帮你在测试网和安全审查阶段尽可能多地暴露问题，而不是在主网上。

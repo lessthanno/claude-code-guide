@@ -1,0 +1,124 @@
+---
+title: "Docker 镜像优化：用 Claude Code 把 2GB 镜像压缩到 50MB"
+date: "2026-05-16"
+tags: ["claude-code", "docker", "containers", "optimization", "devops"]
+pro: false
+---
+
+Docker 镜像大小直接影响部署速度、存储成本、攻击面。一个未优化的 Go 应用镜像可能 1GB+，优化后可以压缩到 20MB。Claude Code 帮你找到镜像臃肿的原因并系统性地解决。
+
+**审查现有 Dockerfile：**
+
+```bash
+cat Dockerfile | claude "审查这个 Dockerfile：
+1. 哪些层会导致镜像体积增大？
+2. 哪些操作可以合并以减少层数？
+3. 构建缓存是否高效利用（高频变化的层放在最后了吗）？
+4. 有没有不必要的工具或文件被打包进去？
+5. 安全问题（以 root 运行、不必要的权限）？
+
+给出优化后的 Dockerfile，解释每个改动的理由。"
+```
+
+**Go 应用的最优 Dockerfile：**
+
+```dockerfile
+# 阶段 1：构建
+FROM golang:1.23-alpine AS builder
+
+# 安装编译依赖（CGO 需要）
+RUN apk add --no-cache gcc musl-dev
+
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+# CGO_ENABLED=0：静态编译，不依赖系统 libc
+# -ldflags="-s -w"：去掉调试符号，进一步缩小体积
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -ldflags="-s -w" \
+    -o /app/server ./cmd/server
+
+# 阶段 2：运行（scratch = 空镜像）
+FROM scratch
+
+# 复制 SSL 证书（HTTPS 调用需要）
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+# 复制时区数据（如果需要时区处理）
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+
+# 复制二进制文件
+COPY --from=builder /app/server /server
+
+# 以非 root 用户运行（scratch 里要用数字 UID）
+USER 1001:1001
+
+EXPOSE 8080
+ENTRYPOINT ["/server"]
+```
+
+**Node.js 应用的多阶段构建：**
+
+```bash
+claude "帮我优化这个 Next.js 应用的 Dockerfile：
+[当前 Dockerfile 内容]
+
+当前镜像：1.8GB
+目标：< 200MB
+
+优化方向：
+1. 分离构建依赖和运行依赖
+2. 只复制构建产物（不是整个 node_modules）
+3. 使用 Next.js standalone 模式
+4. .dockerignore 文件应该包含什么？
+
+给出优化后的 Dockerfile 和 .dockerignore。"
+```
+
+**分析镜像层：**
+
+```bash
+# 先分析当前镜像
+docker history --no-trunc my-app:latest | claude "
+分析这个 Docker 镜像的层信息：
+1. 哪些层占用空间最大？
+2. 哪些层是不必要的（临时文件、缓存等）？
+3. 层的顺序是否合理（缓存友好性）？
+
+给出具体的优化建议。"
+```
+
+**构建缓存优化：**
+
+```bash
+claude "我的 Docker 构建每次都要重新下载依赖，要 3 分钟。
+帮我优化构建缓存利用：
+
+Go 项目，CI 环境（GitHub Actions）
+
+优化点：
+1. Dockerfile 层顺序（先 COPY go.mod，再 COPY 源码）
+2. BuildKit 缓存挂载（--mount=type=cache）
+3. GitHub Actions 的 Docker 层缓存配置
+
+给出具体的 Dockerfile + GitHub Actions 配置。"
+```
+
+**Docker Compose 生产化：**
+
+```bash
+claude "把这个 docker-compose.yml 从开发版本升级到生产就绪版本：
+[当前 docker-compose.yml]
+
+生产化需要：
+1. 资源限制（CPU、内存）
+2. 重启策略
+3. 健康检查
+4. 日志配置（避免磁盘满）
+5. 网络隔离（前端、后端、数据库分网段）
+6. secrets 管理（不用环境变量存密码）"
+```
+
+Docker 优化不是一次性工作——随着应用变复杂，镜像会重新膨胀。建立一个 CI 检查：如果镜像大小超过阈值，构建失败。让体积成为受监控的指标，而不是偶尔想起来才看的东西。
