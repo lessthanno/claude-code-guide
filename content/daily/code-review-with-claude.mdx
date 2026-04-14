@@ -1,0 +1,61 @@
+---
+title: "用 Claude Code 做 Code Review：比人工审查快 10 倍"
+date: "2026-04-20"
+tags: ["claude-code", "code-review", "workflow"]
+pro: false
+---
+
+Code Review 是 Claude Code 最被低估的用法之一。
+
+**基础用法：**
+
+```bash
+# 审查最近的改动
+git diff HEAD~1 | claude "审查这些改动，找安全漏洞和逻辑问题"
+
+# 审查特定文件
+claude "审查这个函数的错误处理是否完整" < src/services/payment.go
+```
+
+**有效的审查 Prompt 结构：**
+
+```bash
+claude "
+请审查以下代码，重点检查：
+1. 安全问题（SQL 注入、XSS、未校验输入）
+2. 错误处理（未捕获的异常、静默失败）
+3. 性能问题（N+1 查询、不必要的循环）
+4. 业务逻辑漏洞
+
+对于每个问题，请说明：严重程度（critical/major/minor）+ 具体位置 + 建议修复方式
+
+代码：
+$(cat src/api/payment.go)
+"
+```
+
+**让 Claude 扮演不同角色：**
+
+```bash
+# 安全工程师视角
+"以安全工程师身份审查，假设所有输入都是恶意的"
+
+# 性能工程师视角
+"以性能工程师身份审查，这个服务每秒处理 10000 请求"
+
+# 新员工视角
+"以刚入职的工程师身份审查，找出文档不清晰或难以理解的地方"
+```
+
+**集成到 git 工作流：**
+
+```bash
+# .git/hooks/pre-push
+#!/bin/bash
+git diff origin/main...HEAD | claude "
+快速审查，只报告 critical 和 major 级别问题。
+如果没有严重问题，只输出 'OK'。
+" | grep -v "^OK$" && echo "Review passed" || exit 1
+```
+
+Claude Code 做 Code Review 不是要替代人工审查，而是在 PR 提交前先过滤掉明显问题——这样人工 Review 时可以聚焦在架构和业务逻辑上，而不是盯着 typo 和明显的 bug。

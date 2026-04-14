@@ -1,0 +1,62 @@
+---
+title: "Claude Code 调试测试失败：比你快，比你准"
+date: "2026-04-20"
+tags: ["claude-code", "testing", "debugging"]
+pro: false
+---
+
+测试失败是 Claude Code 最能发挥价值的场景之一——它能同时看到测试代码、实现代码、和错误信息，形成完整的上下文。
+
+**黄金模式：三件套一起给**
+
+```bash
+claude "
+测试失败了，请帮我找出原因并修复。
+
+失败的测试：
+$(cat tests/payment_test.go)
+
+测试的目标代码：
+$(cat src/payment.go)
+
+错误信息：
+$(go test ./... 2>&1 | head -50)
+"
+```
+
+这比只给错误信息效果好 5 倍——Claude 能看到测试意图和实现的差距在哪里。
+
+**常见失败类型的专用 Prompt：**
+
+```bash
+# 时间/并发相关的 flaky test
+"这个测试有时通过有时失败，可能是竞态条件，帮我分析"
+
+# Mock 不匹配
+"测试用的 mock 和真实接口不匹配，帮我找出哪里对不上"
+
+# 边界条件
+"测试在某个具体输入上失败，帮我找出边界条件"
+```
+
+**让 Claude 写新的测试用例：**
+
+```bash
+claude "
+现有测试都通过了，但这个函数有 3 个场景没有测试覆盖：
+1. 空数组输入
+2. 超过 1000 条记录
+3. 并发调用
+
+帮我补充这三个场景的测试用例，保持和现有测试的代码风格一致。
+
+现有测试：$(cat tests/payment_test.go)
+目标函数：$(cat src/payment.go | grep -A 20 'func ProcessPayments')
+"
+```
+
+**一个反模式：**
+
+不要只把错误信息扔给 Claude 让它猜。`panic: nil pointer dereference` 这个信息本身没什么用——你需要同时提供调用栈和上下文代码，否则 Claude 只能给你通用的答案。
+
+完整上下文 = 精准修复。残缺上下文 = 通用建议。
