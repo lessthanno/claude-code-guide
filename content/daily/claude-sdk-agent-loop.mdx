@@ -1,0 +1,124 @@
+---
+title: "Claude SDK 的 Agent Loop：理解工具调用的底层机制"
+date: "2026-04-30"
+tags: ["claude-code", "sdk", "agent-loop", "tool-use", "advanced"]
+pro: true
+---
+
+用 Claude API 构建 Agent，你需要理解 tool use 背后的循环机制。不理解这个，你写的 Agent 会在不该停的地方停，或者无限循环下去。
+
+**基本的工具调用流程：**
+
+```
+你的请求 → Claude 决定调用工具 → 你执行工具 → 把结果还给 Claude → Claude 继续...
+```
+
+这个循环不会自动停止。你需要在代码里判断"Claude 是否要求调用工具"。
+
+**Python SDK 的标准 Agent Loop：**
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+
+def run_agent(user_message: str, tools: list) -> str:
+    messages = [{"role": "user", "content": user_message}]
+    
+    while True:
+        response = client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=4096,
+            tools=tools,
+            messages=messages,
+        )
+        
+        # 没有工具调用，直接返回文本
+        if response.stop_reason == "end_turn":
+            return response.content[0].text
+        
+        # 有工具调用，执行工具并继续循环
+        if response.stop_reason == "tool_use":
+            # 把 Claude 的回复加入历史
+            messages.append({"role": "assistant", "content": response.content})
+            
+            # 执行所有工具调用
+            tool_results = []
+            for block in response.content:
+                if block.type == "tool_use":
+                    result = execute_tool(block.name, block.input)
+                    tool_results.append({
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "content": str(result),
+                    })
+            
+            # 把工具结果加入历史，让 Claude 继续
+            messages.append({"role": "user", "content": tool_results})
+```
+
+**执行工具的分发逻辑：**
+
+```python
+def execute_tool(name: str, inputs: dict) -> Any:
+    tool_map = {
+        "read_file": lambda i: open(i["path"]).read(),
+        "run_command": lambda i: subprocess.run(
+            i["command"], shell=True, capture_output=True, text=True
+        ).stdout,
+        "search_code": lambda i: search_in_repo(i["pattern"], i.get("path", ".")),
+    }
+    
+    if name not in tool_map:
+        return f"Error: unknown tool {name}"
+    
+    try:
+        return tool_map[name](inputs)
+    except Exception as e:
+        return f"Error executing {name}: {e}"
+```
+
+**加入最大迭代次数保护：**
+
+```python
+MAX_ITERATIONS = 20
+
+def run_agent(user_message: str, tools: list) -> str:
+    messages = [{"role": "user", "content": user_message}]
+    
+    for iteration in range(MAX_ITERATIONS):
+        response = client.messages.create(...)
+        
+        if response.stop_reason == "end_turn":
+            return response.content[0].text
+            
+        # ... 工具调用逻辑
+    
+    raise RuntimeError(f"Agent exceeded {MAX_ITERATIONS} iterations")
+```
+
+**并行工具调用（Claude 支持同时调用多个工具）：**
+
+```python
+# Claude 可能在一次回复里调用多个工具
+# response.content 里会有多个 tool_use block
+# 应该并行执行它们
+
+import asyncio
+
+async def execute_tools_parallel(tool_uses):
+    tasks = [execute_tool_async(t.name, t.input) for t in tool_uses]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    return results
+```
+
+**理解 stop_reason：**
+
+| stop_reason | 含义 | 你应该做什么 |
+|---|---|---|
+| `end_turn` | Claude 决定停止 | 返回最后的文本回复 |
+| `tool_use` | Claude 要调用工具 | 执行工具，继续循环 |
+| `max_tokens` | 到达 token 上限 | 通常是设计问题，需要拆分任务 |
+| `stop_sequence` | 遇到自定义停止符 | 按业务逻辑处理 |
+
+理解这个机制后，你会明白为什么 Claude Code CLI 能做到"自主完成多步任务"——它就是这个 agent loop 的一个很完善的实现。
