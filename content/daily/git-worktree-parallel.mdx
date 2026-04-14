@@ -1,0 +1,58 @@
+---
+title: "Git Worktree + Claude Code：同时开几条线不互相干扰"
+date: "2026-04-18"
+tags: ["claude-code", "git", "workflow", "parallel"]
+pro: false
+---
+
+你有没有遇到过：Claude Code 在帮你改 feature A，但你突然要修一个紧急 bug，只能打断当前任务？
+
+**Git Worktree 解决这个问题。**
+
+它让你在同一个仓库的基础上，同时维护多个工作目录，每个目录对应不同的分支——互不干扰。
+
+**基础用法：**
+
+```bash
+# 创建一个新的 worktree，指向 feature/payment 分支
+git worktree add ../my-project-payment feature/payment
+
+# 现在你有两个工作目录：
+# ~/my-project/         → main 分支（当前）
+# ~/my-project-payment/ → feature/payment 分支
+
+# 在新目录里启动 Claude Code
+cd ../my-project-payment
+claude
+```
+
+**实际工作流：**
+
+```bash
+# 目录 1：Claude Code 在做长期 feature
+~/projects/app/         # main 分支
+
+# 目录 2：Claude Code 处理紧急 bug
+~/projects/app-hotfix/  # hotfix/critical-bug 分支
+
+# 目录 3：Claude Code 做实验性重构
+~/projects/app-refactor/ # refactor/auth 分支
+```
+
+每个目录都是独立的 Claude Code session，有自己的对话历史和上下文。
+
+**清理 worktree：**
+
+```bash
+# 合并完成后删除
+git worktree remove ../my-project-payment
+git worktree prune  # 清理所有无效 worktree
+```
+
+**什么时候用：**
+
+- 等待 PR review 时，开新 worktree 做下一个 feature
+- 需要对比两个版本的行为时，两个 worktree 同时跑
+- Claude Code 跑长任务时，另开一个 worktree 处理其他事
+
+Worktree 本质上是把"并发"从代码层面提升到工作目录层面。配合 Claude Code，相当于你有了多个并行的 AI 工程师。

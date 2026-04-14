@@ -1,0 +1,47 @@
+---
+title: "Claude Code 读大型代码库的正确姿势"
+date: "2026-04-18"
+tags: ["claude-code", "codebase", "workflow"]
+pro: false
+---
+
+当你把一个 5 万行的代码库扔给 Claude Code，它大概率会迷失——不是因为它不聪明，而是因为你没有给它正确的"地图"。
+
+**问题的本质：**
+
+Claude Code 通过 Glob/Grep/Read 工具探索代码库，但它不知道从哪里开始、什么重要、什么不重要。你需要在 CLAUDE.md 里先做一次"导游"。
+
+**有效的 CLAUDE.md 架构说明：**
+
+```markdown
+## 项目结构说明
+
+核心目录：
+- /src/api/ — HTTP handler 层，不含业务逻辑
+- /src/services/ — 业务逻辑层，这里是主要改动区
+- /src/models/ — 数据库 model 定义（别改，除非迁移）
+- /src/utils/ — 纯函数工具库
+
+忽略目录（不要读）：
+- /vendor/, /node_modules/, /.cache/
+- /src/legacy/ — 旧代码，不维护
+
+关键入口：
+- API 路由注册：/src/api/routes.go
+- 配置加载：/src/config/config.go
+- 启动逻辑：/cmd/server/main.go
+```
+
+**实际对话技巧：**
+
+不要说："帮我看看这个代码库然后修复 bug"
+
+要说："先看 /src/api/routes.go 了解路由结构，然后找到 /payment 相关的 handler，再定位 bug"
+
+**分层探索法：**
+
+1. 告诉 Claude 先读目录结构（CLAUDE.md 里写清楚）
+2. 再定位到具体模块（`Grep "关键函数名"`）
+3. 最后读具体实现（`Read 具体文件`）
+
+Claude Code 不是 Google，不擅长从零探索。给它一棵导航树，它的效率会提升 3-5 倍。
