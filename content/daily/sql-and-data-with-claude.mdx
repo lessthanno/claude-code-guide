@@ -1,0 +1,117 @@
+---
+title: "SQL 与数据分析的 Claude Code 工作流"
+date: "2026-05-15"
+tags: ["claude-code", "sql", "data-analysis", "postgresql", "database"]
+pro: false
+---
+
+SQL 最难的不是语法，是**把业务问题翻译成正确的查询逻辑**，特别是涉及窗口函数、CTE、多表关联时。Claude Code 是这里最直接的提效点。
+
+**从业务问题到 SQL：**
+
+```bash
+claude "帮我写这个查询：
+
+业务问题：
+找出过去 30 天内，至少购买过 2 次、且最近一次购买金额比平均高的用户
+
+表结构：
+- orders(id, user_id, amount, created_at)
+- users(id, email, name)
+
+要求：
+1. 先写出思路（不要直接给 SQL）
+2. 再给出 PostgreSQL SQL
+3. 解释每个 CTE 或子查询做了什么
+4. 给出可以用来验证结果的简单测试数据"
+```
+
+**慢查询优化：**
+
+```bash
+claude "这个查询跑了 8 秒，EXPLAIN ANALYZE 如下：
+[explain analyze 输出]
+
+分析：
+1. 哪个操作最慢？（Seq Scan vs Index Scan，Sort 成本等）
+2. 为什么走了全表扫描？
+3. 应该在哪些列上建索引？
+4. 查询本身有没有可以重写的地方（避免不必要的排序、减少 join 代价）
+
+给出具体的优化方案，以及如何验证优化效果（不只看执行时间，看 actual rows vs estimated）"
+```
+
+**窗口函数实战：**
+
+```bash
+claude "用 PostgreSQL 窗口函数解决这些问题：
+
+1. 每个用户的订单，按时间排序，计算每个订单与上一次订单的间隔天数
+2. 每个商品类别下，销售额 Top 3 的商品（允许并列）
+3. 计算每日新增用户的 7 日滚动平均
+4. 找出每个用户的连续登录最长天数
+
+每个给出 SQL + 解释窗口函数的 PARTITION BY 和 ORDER BY 在这里的作用。"
+```
+
+**数据迁移脚本：**
+
+```bash
+claude "写一个 PostgreSQL 数据迁移脚本：
+
+背景：把 orders 表的 status 字段从 VARCHAR 改成枚举类型
+现有值：'pending', 'paid', 'shipped', 'completed', 'cancelled'
+
+要求：
+1. 先建枚举类型
+2. 添加新字段
+3. 用 UPDATE 迁移数据
+4. 删除旧字段
+
+注意：
+- 这个表有 500 万行，迁移不能锁表太久
+- 要有回滚方案
+- 迁移期间如何处理新写入（双写）？
+
+给出分步骤的迁移脚本，包括每步的风险点。"
+```
+
+**报表查询设计：**
+
+```bash
+claude "设计这个报表的查询方案：
+
+报表：产品运营周报
+- 本周新增用户数 vs 上周
+- 每天活跃用户（DAU）趋势
+- 付费转化率（注册→付费）
+- 各渠道来源占比
+- 留存率（D1、D7、D30）
+
+表：users(id, created_at, source), events(user_id, event_type, created_at), payments(user_id, amount, created_at)
+
+问题：
+1. 哪些报表适合实时查询，哪些需要预计算（存汇总表）？
+2. 留存率如何用 SQL 计算？（给出具体 SQL）
+3. 如果这些报表每天 100 次查询，数据库压力如何，要不要 materialized view？"
+```
+
+**数据质量检查：**
+
+```bash
+claude "帮我写数据质量检查脚本，每天定时运行：
+
+检查项：
+1. 孤儿记录（orders 有 user_id，但 users 表不存在）
+2. 重复数据（同一用户同一天同一金额的订单超过 1 条）
+3. 异常值（order amount 超过 99 分位数的 3 倍）
+4. 数据新鲜度（events 表最新数据超过 2 小时没有更新）
+5. NULL 比率异常（某列 NULL 比率突然从 5% 变成 50%）
+
+输出：
+- JSON 格式的检查报告
+- 严重（需要立即处理）vs 警告（需要关注）
+- 每个问题的影响行数"
+```
+
+数据工作的 AI 使用原则：让 Claude 帮你**翻译意图**（业务问题 → SQL），但你要负责**验证结果**（用样本数据核实逻辑）。SQL 写错了，结果看起来可能完全正常但数字是错的——这是数据工作的头号杀手。

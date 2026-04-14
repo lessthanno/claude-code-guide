@@ -1,0 +1,140 @@
+---
+title: "多 Agent 编排：什么时候一个 Claude 不够用"
+date: "2026-05-15"
+tags: ["claude-code", "multi-agent", "orchestration", "agent-loop", "advanced"]
+pro: true
+---
+
+单个 Claude 对话能做很多事，但有些任务需要多个 Agent 协作：长上下文超出限制、任务可以并行、不同子任务需要不同的工具权限。理解何时以及如何编排多 Agent，是 AI 工程的核心能力之一。
+
+**四种需要多 Agent 的场景：**
+
+**场景 1：上下文超限**
+
+当任务需要处理的代码或文档超过单个上下文窗口时：
+
+```python
+# 方案：Map-Reduce 模式
+async def analyze_large_codebase(files: list[str]) -> str:
+    # Map：并行分析每个文件
+    analyses = await asyncio.gather(*[
+        analyze_file(file) for file in files
+    ])
+    
+    # Reduce：汇总分析结果
+    summary = await claude.messages.create(
+        model="claude-sonnet-4-6",
+        messages=[{
+            "role": "user",
+            "content": f"基于以下各文件的分析，给出整体架构总结：\n\n{'\n'.join(analyses)}"
+        }]
+    )
+    return summary.content[0].text
+```
+
+**场景 2：任务需要并行**
+
+```python
+# 代码 review：安全检查、性能检查、可读性检查可以并行
+async def comprehensive_review(code: str) -> dict:
+    security, performance, readability = await asyncio.gather(
+        review_security(code),
+        review_performance(code),
+        review_readability(code),
+    )
+    return {
+        "security": security,
+        "performance": performance,
+        "readability": readability,
+    }
+```
+
+**场景 3：工具隔离（Subagent 沙箱）**
+
+```python
+# 某些子任务需要隔离的工具权限
+# 比如：一个 agent 可以执行代码，另一个只能读文件
+
+orchestrator_tools = [search_files, read_file, spawn_executor]
+executor_tools = [run_code, write_file]  # 更高权限，隔离执行
+
+# orchestrator 决定做什么，executor 安全地执行
+```
+
+**场景 4：验证和反驳**
+
+```python
+# Generator-Critic 模式
+async def generate_with_critique(task: str) -> str:
+    # Generator 生成答案
+    draft = await generator_agent(task)
+    
+    # Critic 找问题
+    critique = await critic_agent(
+        f"批判性评审以下内容，找出逻辑漏洞和遗漏：\n{draft}"
+    )
+    
+    # Generator 基于反馈修改
+    final = await generator_agent(
+        f"原始答案：{draft}\n\n评审意见：{critique}\n\n修改后的版本："
+    )
+    return final
+```
+
+**Claude Code 的 subagent 模式：**
+
+```bash
+# 在 Claude Code 中，可以让 Claude 自己 spawn subagent
+claude "分析整个 src/ 目录的代码质量。
+这个任务可能超出单次上下文，你可以：
+1. 先列出所有文件
+2. 分批分析（每批 10 个文件）
+3. 最后综合给出总体报告
+
+按你认为最高效的方式自行安排子任务。"
+```
+
+**任务分解的提示词模式：**
+
+```python
+ORCHESTRATOR_PROMPT = """
+你是一个任务编排 agent。
+给定一个复杂任务，你需要：
+1. 分解成可独立执行的子任务
+2. 判断哪些可以并行，哪些必须串行
+3. 为每个子任务定义输入/输出格式
+4. 执行子任务（通过工具调用）
+5. 汇总结果
+
+重要原则：
+- 子任务应该尽量独立（减少依赖）
+- 每个子任务的指令应该自包含（不依赖外部上下文）
+- 子任务失败应该有明确的错误处理
+"""
+```
+
+**状态管理：跨 Agent 传递上下文**
+
+```python
+# 用结构化的中间状态，而不是自然语言传递上下文
+class AgentState(TypedDict):
+    task_id: str
+    original_request: str
+    subtask_results: dict[str, Any]
+    current_step: str
+    errors: list[str]
+
+# 每个 agent 接收完整状态，只修改自己负责的部分
+async def agent_a(state: AgentState) -> AgentState:
+    result = await do_work(state["original_request"])
+    return {**state, "subtask_results": {**state["subtask_results"], "a": result}}
+```
+
+**何时不需要多 Agent：**
+
+单一 Claude 对话足够处理：
+- 上下文在 100K tokens 以内的任务
+- 不需要并行的顺序任务
+- 不需要工具隔离的任务
+
+多 Agent 的开销是真实的：编排代码、状态管理、调试复杂度。只在收益明显超过成本时才引入。
