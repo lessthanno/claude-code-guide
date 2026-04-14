@@ -19,6 +19,7 @@ export interface Post {
   domain?: 'physics' | 'math' | 'control' | 'info'
   content: string
   excerpt: string
+  readingTime: number  // minutes
 }
 
 const CONTENT_DIR = path.join(process.cwd(), 'content')
@@ -107,6 +108,7 @@ export function getChannelPosts(channel: Channel): Post[] {
         domain: data.domain,
         content: html,
         excerpt: content.replace(/<[^>]+>/g, '').replace(/```[\s\S]*?```/g, '').replace(/[*`#-]/g, '').slice(0, 120).trim() + '...',
+        readingTime: Math.max(1, Math.round(content.replace(/```[\s\S]*?```/g, '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '').length / 300)),
       } as Post
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())

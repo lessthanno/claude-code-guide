@@ -77,7 +77,10 @@ export default function PostCard({ post, compact = false }: { post: Post; compac
             }}>Pro</span>
           )}
 
-          <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--text3)' }}>{timeAgo}</span>
+          <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text3)' }}>{post.readingTime} 分钟</span>
+            <span style={{ fontSize: '12px', color: 'var(--text3)' }}>{timeAgo}</span>
+          </span>
         </div>
 
         {/* Title */}
