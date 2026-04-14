@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
 import { MobileMenuButton } from '@/components/MobileDrawer'
-import { getChannelPosts, CHANNEL_META, Channel } from '@/lib/content'
+import { getChannelPosts, getChannelTagCounts, CHANNEL_META, Channel } from '@/lib/content'
 
 const VALID_CHANNELS: Channel[] = ['daily', 'mental-models', 'templates', 'community']
 
@@ -17,6 +17,10 @@ export default async function ChannelPage({ params }: { params: Promise<{ channe
   const ch = channel as Channel
   const meta = CHANNEL_META[ch]
   const posts = getChannelPosts(ch)
+  const tagCounts = getChannelTagCounts(ch)
+  const topTags = Object.entries(tagCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
 
   return (
     <div className="layout-root">
@@ -57,6 +61,35 @@ export default async function ChannelPage({ params }: { params: Promise<{ channe
               posts.map(post => <PostCard key={post.slug} post={post} />)
             )}
           </main>
+
+          {topTags.length > 0 && (
+            <aside className="layout-aside">
+              <div style={{
+                background: 'var(--bg2)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                padding: '16px',
+              }}>
+                <div style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text3)', marginBottom: '12px' }}>
+                  热门话题
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {topTags.map(([tag, count]) => (
+                    <span key={tag} style={{
+                      fontSize: '11px',
+                      padding: '3px 8px',
+                      borderRadius: '20px',
+                      border: '1px solid var(--border2)',
+                      color: 'var(--text3)',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      #{tag} <span style={{ color: 'var(--text3)', opacity: 0.5 }}>{count}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </aside>
+          )}
         </div>
       </div>
     </div>

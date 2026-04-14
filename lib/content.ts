@@ -150,3 +150,14 @@ export function getPost(channel: Channel, slug: string): Post | null {
   return posts.find(p => p.slug === slug) ?? null
 }
 
+export function getChannelTagCounts(channel: Channel): Record<string, number> {
+  const posts = getChannelPosts(channel)
+  const counts: Record<string, number> = {}
+  for (const post of posts) {
+    for (const tag of post.tags) {
+      counts[tag] = (counts[tag] || 0) + 1
+    }
+  }
+  return counts
+}
+
