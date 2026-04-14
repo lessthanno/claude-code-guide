@@ -1,0 +1,101 @@
+---
+title: "TypeScript 类型系统与 Claude Code：让类型为你工作"
+date: "2026-05-15"
+tags: ["claude-code", "typescript", "type-system", "type-safety", "frontend"]
+pro: false
+---
+
+TypeScript 的价值不是"不用写注释了"，而是**让编译器成为你的第一道 bug 防线**。但很多 TypeScript 代码库里到处是 `any`、`as`、非空断言，把类型安全绕没了。Claude Code 帮你用类型系统表达真实意图。
+
+**消灭 `any`：**
+
+```bash
+claude "这个函数有一堆 any，帮我用具体类型替换：
+
+function processApiResponse(data: any): any {
+  return {
+    id: data.id,
+    name: data.user?.name,
+    items: data.items.map((x: any) => ({ id: x.id, price: x.amount * 100 }))
+  }
+}
+
+要求：
+1. 推断并定义所有涉及的类型（包括输入的 API 响应结构）
+2. 处理可选字段（用 ? 而不是非空断言）
+3. 返回类型要精确（不要 object 或 Record<string, unknown>）
+4. 如果类型无法确定（外部 API），说明如何用 zod 做运行时验证"
+```
+
+**条件类型和工具类型：**
+
+```bash
+claude "帮我实现这个复杂类型：
+
+需求：
+- ApiResponse<T> 类型：成功时 { data: T, error: null }，失败时 { data: null, error: Error }
+- DeepPartial<T>：递归把所有字段变可选（包括嵌套对象）
+- NonNullableDeep<T>：递归去掉所有 null/undefined
+- ExtractRouteParams<T>：从路由字符串提取参数（'/users/:id/posts/:postId' → { id: string, postId: string }）
+
+每个给出实现和使用示例，说明为什么这样设计。"
+```
+
+**泛型函数设计：**
+
+```bash
+claude "帮我设计这些工具函数的类型签名：
+
+1. groupBy：把数组按 key 分组
+   groupBy([{name:'a',age:1},{name:'b',age:1}], 'age')
+   → { 1: [{name:'a',...}, {name:'b',...}] }
+
+2. pick：从对象选出指定 key
+   pick({a:1, b:2, c:3}, ['a', 'c']) → {a:1, c:3}
+
+3. pipe：函数管道，类型要链式传递
+   pipe(value, fn1, fn2, fn3)
+
+要求：返回类型必须精确推断，不能是 any 或 object。
+给出类型签名 + 实现，解释每个类型参数的作用。"
+```
+
+**辨别联合类型（Discriminated Union）：**
+
+```bash
+claude "我有这些状态，用联合类型表达比用 status 字段 + 可选属性更安全：
+
+当前：
+interface Task {
+  status: 'pending' | 'running' | 'success' | 'error'
+  result?: string  // 只在 success 时有
+  error?: Error    // 只在 error 时有
+  startTime?: Date // 只在 running/success/error 时有
+}
+
+问题：result 在 pending 状态也可以赋值（类型没有阻止这种错误）
+
+帮我改成 Discriminated Union，并且：
+1. 给出所有状态的类型定义
+2. 举例说明 narrowing 如何在 switch/if 里工作
+3. 展示 Redux reducer 里的使用模式"
+```
+
+**类型安全的 API 客户端：**
+
+```bash
+claude "帮我用 TypeScript 类型系统实现类型安全的 API 客户端：
+
+要求：
+1. 定义 endpoints 映射（路径 → 请求/响应类型）
+2. 调用时自动推断响应类型（不需要手动传泛型）
+3. 路径参数类型检查（/users/:id 里 id 必须提供）
+4. 错误类型统一处理
+
+参考接口：
+const api = createApiClient(endpoints)
+const user = await api.get('/users/:id', { id: '123' })
+// user 类型自动推断为 User，不需要 as User"
+```
+
+TypeScript 的真正价值是：**当你的代码变得复杂时，类型系统帮你保持对整个系统的掌控**。`any` 是放弃这种掌控。用 Claude Code 帮你写出真正类型安全的代码，而不只是"看起来有类型"的代码。

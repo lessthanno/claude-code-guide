@@ -1,0 +1,101 @@
+---
+title: "Terraform + Claude Code：基础设施即代码的 AI 工作流"
+date: "2026-05-14"
+tags: ["claude-code", "terraform", "infrastructure", "iac", "devops"]
+pro: false
+---
+
+Terraform 的难点不是语法，而是**资源间依赖关系的隐式复杂性**——一个 VPC 的 CIDR 块会影响后面二十个资源。Claude Code 帮你在写配置之前就想清楚这些关系。
+
+**从需求到 Terraform 模块：**
+
+```bash
+claude "帮我设计这个 AWS 基础设施的 Terraform 配置：
+
+需求：
+- 一个 VPC，2 个可用区，公有/私有子网各 2 个
+- ECS Fargate 跑应用（需要从私有子网访问 RDS）
+- RDS PostgreSQL 在私有子网，多 AZ
+- ALB 在公有子网，监听 443
+- 需要 ACM 证书
+- CloudWatch 日志
+
+要求：
+1. 模块化设计（vpc、rds、ecs 分开）
+2. 变量和输出要完整
+3. 用 data source 而不是 hardcode AMI 等信息
+4. 给出资源依赖图，帮我理解创建顺序"
+```
+
+**审查现有 Terraform 配置：**
+
+```bash
+cat main.tf | claude "审查这个 Terraform 配置，检查：
+1. 安全风险（安全组过于宽松、公开暴露的资源等）
+2. 成本风险（会产生意外费用的配置）
+3. 可用性风险（单点故障、无备份等）
+4. 最佳实践违反（hardcode、缺少标签、无状态管理等）
+
+每个问题给出严重级别（Critical/Warning/Info）和修复建议。"
+```
+
+**理解 `terraform plan` 的影响：**
+
+```bash
+terraform plan -out=tfplan && terraform show -json tfplan | claude "
+分析这个 Terraform plan 的影响：
+1. 哪些资源会被销毁？（列出并说明影响）
+2. 哪些改动会导致服务中断？
+3. 哪些改动是安全的（不影响线上）？
+4. 有没有不可逆的操作？
+5. 建议的执行顺序（如果有风险，如何分步应用）"
+```
+
+**模块重构：**
+
+```bash
+claude "把这段 Terraform 代码重构成可复用模块：
+[当前的 main.tf 内容]
+
+要求：
+1. 模块接受哪些变量（必填/选填，提供合理默认值）
+2. 输出哪些值（供其他模块引用）
+3. 模块边界在哪里（一个模块做一件事）
+4. 如何被调用（给出使用示例）
+
+不要过度抽象——刚好够用即可。"
+```
+
+**状态管理和远程 backend：**
+
+```bash
+claude "我们的 Terraform 目前用本地 state，团队在协作时出现冲突。
+帮我迁移到 S3 + DynamoDB backend：
+
+1. 先建 S3 bucket 和 DynamoDB table（注意：这部分本身要用 Terraform 管理吗？）
+2. 迁移现有 state 文件的步骤
+3. 如何避免迁移期间 state 损坏
+4. 配置 state 加密和版本控制
+5. 给团队的使用规范（谁能 apply，什么时候加锁）"
+```
+
+**环境管理（dev/staging/prod）：**
+
+```bash
+claude "我们有三个环境，目前用 copy-paste 维护三份几乎相同的 Terraform 代码。
+帮我设计合理的多环境策略：
+
+选项对比：
+1. Workspaces 方案
+2. 目录分离方案（environments/dev, environments/prod）
+3. Terragrunt 方案
+
+我们的情况：
+- 三个环境配置差异约 20%（主要是资源大小和副本数）
+- 团队 4 人，都会改基础设施
+- 需要 PR review 才能改 prod
+
+哪个方案最适合？给出具体的目录结构。"
+```
+
+Terraform 的 AI 辅助原则：**让 Claude 帮你预见后果，而不是替你执行**。每个 `apply` 都是真实资源的变化，理解 plan 比快速 apply 更重要。

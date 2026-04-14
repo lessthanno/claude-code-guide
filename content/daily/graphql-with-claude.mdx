@@ -1,0 +1,123 @@
+---
+title: "GraphQL API 设计与 Claude Code：Schema 即合同"
+date: "2026-05-14"
+tags: ["claude-code", "graphql", "api-design", "schema", "backend"]
+pro: false
+---
+
+GraphQL 的核心挑战不是查询语言本身，而是**Schema 设计决策会锁定你的 API 合同**。一个字段名改错了，你的所有客户端都跟着坏。Claude Code 帮你在写第一行 Schema 之前，把这些决策想清楚。
+
+**从产品需求设计 Schema：**
+
+```bash
+claude "帮我为这个产品设计 GraphQL Schema：
+
+产品：工程师知识库（文章、标签、作者、评论）
+
+需求：
+- 列出文章（支持按 channel、tag 过滤，分页）
+- 查看文章详情（含作者信息和评论）
+- 作者页面（含其所有文章）
+- 热门标签
+
+设计要求：
+1. 命名遵循 GraphQL 最佳实践（camelCase、单数类型名）
+2. 分页用 Cursor-based（不用 offset）
+3. 考虑 N+1 问题——哪些字段需要 DataLoader？
+4. 哪些字段不该暴露在 Schema 里？（内部字段、PII）"
+```
+
+**审查 Schema 设计：**
+
+```bash
+claude "审查这个 GraphQL Schema 的设计质量：
+[schema.graphql 内容]
+
+检查：
+1. 命名一致性（动词/名词、大小写规范）
+2. 类型设计问题（可以拆分或合并的类型）
+3. 连接关系是否正确（Edge/Node 模式是否合适）
+4. 缺失的枚举（应该用 enum 而不是 String 的地方）
+5. 可选和必填的设计是否合理（不必要的 nullable）
+6. 有没有会引发 N+1 的设计"
+```
+
+**Resolver 实现：**
+
+```bash
+claude "基于这个 Schema，帮我实现 Go 的 resolver：
+
+Schema 片段：
+type Query {
+  articles(channel: Channel, tag: String, first: Int, after: String): ArticleConnection!
+}
+
+要求：
+1. 用 sqlc 生成的查询（不手写 SQL）
+2. 分页逻辑（cursor encode/decode）
+3. DataLoader 集成（批量加载 author）
+4. 错误处理（区分用户错误和系统错误）
+
+给出完整的 resolver 函数，包括 DataLoader 的定义。"
+```
+
+**Schema 演进策略：**
+
+```bash
+claude "我需要修改 GraphQL Schema，但不能破坏现有客户端。
+
+改动：
+1. 把 User.name 拆成 User.firstName + User.lastName
+2. 把 Article.tags 从 [String] 改成 [Tag]（Tag 是新类型）
+3. 废弃 Query.latestArticles，用 Query.articles 替代
+
+帮我制定迁移策略：
+1. 使用 @deprecated 的时机和方式
+2. 如何支持新旧字段并存
+3. 客户端迁移的时间窗口
+4. 如何用 API 用量统计判断何时可以删除废弃字段"
+```
+
+**性能优化：**
+
+```bash
+claude "这个 GraphQL 查询跑了 2 秒，日志显示发了 150+ 个数据库查询：
+
+query {
+  articles(first: 20) {
+    nodes {
+      title
+      author { name avatar }
+      tags { name }
+      commentsCount
+    }
+  }
+}
+
+分析 N+1 问题：
+1. 哪些字段触发了 N+1？
+2. 每个如何用 DataLoader 解决？
+3. DataLoader 的 batch 和 cache 策略
+4. 是否有字段可以用单次 JOIN 查询解决而不需要 DataLoader？"
+```
+
+**鉴权设计：**
+
+```bash
+claude "设计这个 GraphQL API 的字段级鉴权：
+
+规则：
+- 游客：只能读公开文章
+- 登录用户：可以读所有文章，可以评论
+- Pro 用户：额外能读 pro: true 的文章
+- 管理员：所有权限
+
+方案选择：
+1. Directive 方案（@auth(requires: PRO)）
+2. Resolver 内联检查
+3. Schema 层拆分（publicSchema vs privateSchema）
+
+推荐哪种？给出具体实现。"
+```
+
+GraphQL 的设计哲学：Schema 是你和所有客户端之间的合同。越早想清楚命名、分页、关系设计，后续的演进代价越低。Claude 帮你在白板阶段就暴露这些决策的代价。
