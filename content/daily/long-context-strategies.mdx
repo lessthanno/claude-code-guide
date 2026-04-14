@@ -1,0 +1,99 @@
+---
+title: "超长 Context 的策略：200K tokens 怎么用对"
+date: "2026-05-09"
+tags: ["claude-code", "context-window", "long-context", "strategy", "advanced"]
+pro: true
+---
+
+Claude 支持 200K tokens 的 context window。这大约够放下 400-500 个 Go 源文件，或者一个中等规模的代码库。但"能放"和"放了有效"是两回事。
+
+**长 context 的核心问题：Lost in the Middle**
+
+研究表明，LLM 对 context 的利用是不均匀的：
+- **开头**：注意力最高
+- **结尾**：注意力次高
+- **中间**：注意力明显下降
+
+这意味着把 50 个文件按 A-Z 顺序堆进 context，Claude 对中间文件的处理质量会下降。
+
+**正确的长 context 组织策略：**
+
+**策略一：最重要的内容放两端**
+
+```
+context 结构：
+[重要的约束和规则]  ← 开头
+[最相关的代码文件]  ← 开头
+...
+[次要的背景信息]    ← 中间（可以接受质量下降）
+...
+[当前具体的任务]    ← 结尾
+```
+
+**策略二：按相关性排序，不按字母/时间排序**
+
+```python
+def build_optimal_context(task, files):
+    # 计算每个文件和任务的相关性
+    scored = [(relevance_score(f, task), f) for f in files]
+    scored.sort(reverse=True)
+    
+    # 相关性最高的放在最前面
+    # 其次的放在最后面
+    n = len(scored)
+    front = scored[:n//3]    # 最相关
+    back = scored[n//3*2:]   # 次相关
+    middle = scored[n//3:n//3*2]  # 最不相关放中间
+    
+    return front + middle + back
+```
+
+**策略三：使用标记分隔不同来源**
+
+```
+<file path="internal/payment/service.go">
+[代码内容]
+</file>
+
+<file path="internal/payment/service_test.go">
+[测试内容]
+</file>
+
+<task>
+修复 ProcessRefund 函数的并发问题
+</task>
+```
+
+明确的结构标记帮助 Claude 更准确地定位信息。
+
+**什么时候不应该用长 context：**
+
+```
+不适合用长 context 的场景：
+- 明确知道相关文件（直接提供相关文件即可）
+- 探索性对话（中途内容会被遗忘）
+- 多轮迭代任务（每轮都在增加新内容）
+```
+
+**长 context 的实际成本：**
+
+```
+200K token context 的成本：
+- 输入：200,000 × $3/1M = $0.60 per request
+- 加上 prompt caching：前几次贵，缓存命中后便宜
+
+如果每天发送 50 个长 context 请求：
+$0.60 × 50 = $30/天 = $900/月
+
+对比：只发送 5K tokens 的精准 context
+$0.015 × 50 = $0.75/天
+```
+
+**最有效的长 context 使用场景：**
+
+1. **一次性的深度分析**：理解整个代码库的架构
+2. **跨文件重构**：需要同时看多个文件的改动
+3. **大型 PR review**：一次看完所有改动
+4. **全局搜索和分析**：找出所有满足某条件的代码
+
+记住：长 context 是工具，不是解决方案。先尝试精准的小 context，当你明确需要全局视角时再用长 context。
