@@ -470,6 +470,8 @@
   <a href="#nash">10 · 纳什均衡 <span class="nav-tag tag-game">博弈</span></a>
   <a href="#lyapunov">11 · Lyapunov 稳定性 <span class="nav-tag tag-ctrl">控制</span></a>
   <a href="#impedance">12 · 阻抗匹配 <span class="nav-tag tag-elec">电子</span></a>
+  <a href="#markov">13 · 马尔可夫链 <span class="nav-tag tag-prob">概率</span></a>
+  <a href="#emergence">14 · 涌现 <span class="nav-tag tag-phys">系统</span></a>
   <div class="nav-section">快速查找</div>
   <a href="#signals">识别信号表</a>
   <a href="#antipatterns">反模式对照</a>
@@ -479,7 +481,7 @@
   <div class="page-header">
     <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#666;font-weight:600;margin-bottom:12px;">Vol.01 · 参考手册</div>
     <h1>Claude Code 开发心智模型手册</h1>
-    <p>12 个来自物理/数学/控制论/概率论/博弈论/电子工程的核心概念，映射到 Claude Code 真实开发场景。<br>每个概念包含：核心公式 → 识别信号 → 代码模式 → 错误用法 → CLAUDE.md 片段。</p>
+    <p>14 个来自物理/数学/控制论/概率论/博弈论/电子工程/复杂性科学的核心概念，映射到 Claude Code 真实开发场景。<br>每个概念包含：核心公式 → 识别信号 → 代码模式 → 错误用法 → CLAUDE.md 片段。</p>
     <div class="meta-pills">
       <span class="pill">Claude Code</span>
       <span class="pill">Prompt Engineering</span>
@@ -499,6 +501,8 @@
       <a href="#nash" class="toc-item"><div class="toc-num">10</div><div class="toc-name">纳什均衡</div><div class="toc-domain">多 Agent 协作</div></a>
       <a href="#lyapunov" class="toc-item"><div class="toc-num">11</div><div class="toc-name">Lyapunov 稳定性</div><div class="toc-domain">Agent 鲁棒性</div></a>
       <a href="#impedance" class="toc-item"><div class="toc-num">12</div><div class="toc-name">阻抗匹配</div><div class="toc-domain">Prompt 对齐</div></a>
+      <a href="#markov" class="toc-item"><div class="toc-num">13</div><div class="toc-name">马尔可夫链</div><div class="toc-domain">Session 状态设计</div></a>
+      <a href="#emergence" class="toc-item"><div class="toc-num">14</div><div class="toc-name">涌现</div><div class="toc-domain">Multi-Agent 设计</div></a>
     </div>
   </div>
 
@@ -2025,6 +2029,108 @@ LLM 类比：
 - 不用"帮我优化/改进/完善"等模糊动词
 - 不在单次请求中混合多个不同类型的任务
 - 不用"尽量/最好/如果可以"（会降低执行优先级）</span></pre>
+    </div>
+  </div>
+
+  <!-- ===== 13 马尔可夫链 ===== -->
+  <div class="concept" id="markov">
+    <div class="concept-header">
+      <div class="concept-num">13</div>
+      <div class="concept-title-block">
+        <h2>马尔可夫链 · Markov Chain</h2>
+        <div class="concept-subtitle">概率论 · 用于 Agent 状态管理与 Session 设计</div>
+      </div>
+      <span class="domain-badge tag-prob">概率</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心公式</div>
+      <div class="code-header"><span>马尔可夫性质</span></div>
+<pre><span class="cm">P(Xₙ₊₁ = s | X₁, X₂, ..., Xₙ) = P(Xₙ₊₁ = s | Xₙ)
+
+下一个状态只取决于当前状态，与历史无关。</span></pre>
+    </div>
+
+    <div class="block">
+      <div class="block-label">对 LLM 的含义</div>
+      <p>Transformer 理论上能看到所有历史（全局 attention），但实践中：远处的 token attention 权重更低，早期指令会被稀释。Context window 是硬截断。这意味着你的对话历史越长，早期的约束越容易被"遗忘"。</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">识别信号</div>
+      <table class="signal-table">
+        <tr><th>现象</th><th>马尔可夫解释</th></tr>
+        <tr><td>长对话后 Claude 忽略早期指令</td><td>状态漂移——远处状态影响力衰减</td></tr>
+        <tr><td>多步 Agent 任务偏离原始目标</td><td>每步只看当前状态，无法回溯</td></tr>
+        <tr><td>CLAUDE.md 里的规则被遗忘</td><td>context 被新内容稀释</td></tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — Agent 状态机</div>
+<pre><span class="cm"># 显式状态转换，不依赖对话历史</span>
+<span class="kw">class</span> <span class="fn">AgentStateMachine</span>:
+    states = [<span class="str">"IDLE"</span>, <span class="str">"PLANNING"</span>, <span class="str">"EXECUTING"</span>, <span class="str">"VERIFYING"</span>, <span class="str">"DONE"</span>]
+
+    <span class="kw">def</span> <span class="fn">transition</span>(self, current_state, event):
+        transitions = {
+            (<span class="str">"IDLE"</span>, <span class="str">"task_received"</span>): <span class="str">"PLANNING"</span>,
+            (<span class="str">"PLANNING"</span>, <span class="str">"plan_approved"</span>): <span class="str">"EXECUTING"</span>,
+            (<span class="str">"EXECUTING"</span>, <span class="str">"task_done"</span>): <span class="str">"VERIFYING"</span>,
+            (<span class="str">"EXECUTING"</span>, <span class="str">"error"</span>): <span class="str">"PLANNING"</span>,  <span class="cm"># 重新规划</span>
+            (<span class="str">"VERIFYING"</span>, <span class="str">"passed"</span>): <span class="str">"DONE"</span>,
+        }
+        <span class="kw">return</span> transitions.get((current_state, event), current_state)</pre>
+    </div>
+
+    <div class="block">
+      <div class="block-label">错误用法</div>
+      <div class="error-block">在 session 开头设置约束，然后进行大量对话，期望约束始终生效。状态漂移会让早期约束失去影响力。</div>
+      <p>修复：把核心约束放在 CLAUDE.md（每次都重新加载），或在长对话中定期用 <code>/compact</code> 保留关键约束。</p>
+    </div>
+  </div>
+
+  <!-- ===== 14 涌现 ===== -->
+  <div class="concept" id="emergence">
+    <div class="concept-header">
+      <div class="concept-num">14</div>
+      <div class="concept-title-block">
+        <h2>涌现 · Emergence</h2>
+        <div class="concept-subtitle">复杂性科学 · 用于理解 AI 能力边界与 Multi-Agent 系统设计</div>
+      </div>
+      <span class="domain-badge tag-phys">系统</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心概念</div>
+      <p>系统整体表现出其组成部分所没有的性质。蚁群无中央指挥却能建造复杂巢穴；神经元不会"思考"但大脑会。LLM 超过某规模阈值后，能力出现非线性跳跃。</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">识别信号</div>
+      <table class="signal-table">
+        <tr><th>现象</th><th>涌现解释</th></tr>
+        <tr><td>同一 prompt 在 Haiku 和 Sonnet 效果差异极大</td><td>某能力在小模型上未涌现</td></tr>
+        <tr><td>Multi-Agent 系统比单 Agent 更能发现问题</td><td>协作涌现出角色制衡效果</td></tr>
+        <tr><td>Claude 偶尔能做出你没预期的推理</td><td>涌现能力——可遇不可求</td></tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — 利用多 Agent 涌现</div>
+<pre><span class="cm"># 单 Agent 三重角色——互相干扰</span>
+result = agent.plan_and_execute_and_verify(task)
+
+<span class="cm"># 分离角色——涌现出制衡效果</span>
+plan = planning_agent.run(task)
+execution = execution_agent.run(plan)
+verdict = verification_agent.run(task, execution)  <span class="cm"># 独立视角</span></pre>
+    </div>
+
+    <div class="block">
+      <div class="block-label">错误用法</div>
+      <div class="error-block">把涌现能力当成稳定的生产保障。"Claude 上次能做这个"不代表每次都能。涌现能力上下文敏感、不可精确复现。</div>
+      <p>原则：把涌现当惊喜，把显式设计当基础。关键任务用明确约束，不靠能力涌现。</p>
     </div>
   </div>
 
