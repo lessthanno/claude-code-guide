@@ -39,14 +39,15 @@ export default function Sidebar() {
           alignItems: 'center',
           justifyContent: 'center',
           fontFamily: 'var(--mono)',
-          fontSize: '12px',
+          fontSize: '11px',
           color: 'var(--bg)',
           fontWeight: 700,
           flexShrink: 0,
-        }}>知</div>
+          letterSpacing: '-0.02em',
+        }}>CC</div>
         <div>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)', lineHeight: 1.2 }}>知识积累</div>
-          <div style={{ fontSize: '10px', color: 'var(--text3)', letterSpacing: '0.05em' }}>工程师社群</div>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)', lineHeight: 1.2 }}>Claude Code</div>
+          <div style={{ fontSize: '10px', color: 'var(--text3)', letterSpacing: '0.05em' }}>工程师手册</div>
         </div>
       </div>
 
