@@ -1,0 +1,101 @@
+---
+title: "Go 工程师的 Claude Code 实践：最有价值的使用场景"
+date: "2026-05-08"
+tags: ["claude-code", "go", "golang", "backend", "workflow"]
+pro: false
+---
+
+Go 工程师用 Claude Code 有特定的甜点区。Go 的强类型、严格的错误处理约定、标准库设计哲学，这些都让 Claude 在 Go 项目里的表现特别好。
+
+**接口设计：Go 的核心**
+
+```bash
+claude "我在设计一个存储抽象层。
+当前只有 PostgreSQL 实现，但未来可能加 Redis 缓存或 S3。
+帮我设计 Go interface，遵循：
+1. 接口尽可能小（单方法接口优先）
+2. 命名遵循 Go 约定（-er 后缀）
+3. 方法签名使用 context.Context
+4. 返回具体的错误类型（不用 error 的地方用具体类型）"
+```
+
+**错误处理的惯用写法：**
+
+```bash
+claude "把这段代码（handler.go:45-90）的错误处理改成 Go 惯用风格：
+1. 使用 errors.Is / errors.As 而不是字符串比较
+2. 定义 sentinel errors 和 error types
+3. 在关键位置用 fmt.Errorf('%w') 包装错误
+4. 合理使用 log/slog 记录错误上下文
+
+不要改变函数签名。"
+```
+
+**Goroutine 泄漏检查：**
+
+```bash
+claude "检查 internal/worker/ 目录里的代码：
+1. 有没有 goroutine 在 channel 接收时永远阻塞（没有 context 取消）？
+2. 有没有 goroutine 在 channel 发送时永远阻塞（没有 buffer 或接收方已退出）？
+3. 有没有 WaitGroup 可能永远不 Done 的情况？
+4. defer 里有没有可能 panic 的调用？
+
+特别关注 server 启动和关闭的代码路径。"
+```
+
+**Table-driven 测试的生成：**
+
+```go
+// 让 Claude 帮你写 Go 风格的表格驱动测试
+claude "为 internal/parser/url.go 的 ParseURL 函数
+写表格驱动测试：
+
+覆盖：
+- 正常 URL
+- 缺少 scheme 的 URL
+- 带 query parameter 的 URL
+- 带 fragment 的 URL
+- 国际化域名（IDN）
+- 超长 URL（边界条件）
+
+使用 t.Run 子测试，测试名要描述场景而不是输入。"
+```
+
+**并发代码的常见模式：**
+
+```bash
+claude "我需要并发处理一批用户 ID，
+每个用户调用外部 API 获取数据，
+最多并发 10 个请求，
+任意一个失败时取消其他所有请求。
+
+用 Go 的 errgroup + context 实现，
+加上超时控制（每个请求 3 秒，整体 30 秒）。"
+```
+
+**生成 CLI 工具：**
+
+```bash
+claude "用 cobra 生成一个 CLI 工具：
+命令：migrate up/down/status
+参数：--env（dev/staging/prod）, --dry-run
+连接数据库：从环境变量 DATABASE_URL 读取
+遵循：12-factor app 的配置原则
+
+参考 cmd/ 目录里现有工具的风格。"
+```
+
+**Go 特有的反模式检测：**
+
+```bash
+claude "扫描整个代码库，找出 Go 反模式：
+1. 在 loop 里创建 goroutine 但没有捕获循环变量（Go 1.21 之前的经典 bug）
+2. 忽略 Close() 的返回错误（特别是 db.Close、file.Close）
+3. 使用 time.Sleep 做等待而不是 ticker 或 channel
+4. map 的并发读写没有加锁
+5. append 返回值没有赋值回原变量
+
+给出文件名和行号。"
+```
+
+Go 的显式性使得代码审查特别适合 Claude——每个错误处理、每个接口实现都是明显的，没有隐式的 magic。这也让 Claude 的分析更可靠。
