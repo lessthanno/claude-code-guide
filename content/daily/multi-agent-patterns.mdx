@@ -1,0 +1,75 @@
+---
+title: "Multi-Agent 的三种架构模式：什么时候用哪种"
+date: "2026-04-22"
+tags: ["claude-code", "multi-agent", "architecture"]
+pro: false
+---
+
+不是所有多 Agent 系统都一样。用错架构，会让系统复杂度翻倍但效果没提升。
+
+**三种基础模式：**
+
+**1. 流水线（Pipeline）— 串行**
+
+```
+Input → Agent A → Agent B → Agent C → Output
+```
+
+适用：每个步骤依赖上一步的输出
+例子：`原始数据 → 清洗 → 分析 → 生成报告`
+
+```typescript
+const raw = await fetchData()
+const clean = await cleaningAgent.run(raw)
+const analysis = await analysisAgent.run(clean)
+const report = await reportAgent.run(analysis)
+```
+
+**2. 扇出（Fan-out）— 并行**
+
+```
+         → Agent A →
+Input → Split      → Merge → Output
+         → Agent B →
+```
+
+适用：多个独立任务可以并行处理
+例子：同时翻译成 5 种语言
+
+```typescript
+const [zh, en, ja, ko, es] = await Promise.all([
+  translateAgent.run(text, 'zh'),
+  translateAgent.run(text, 'en'),
+  translateAgent.run(text, 'ja'),
+  translateAgent.run(text, 'ko'),
+  translateAgent.run(text, 'es'),
+])
+```
+
+**3. 路由（Router）— 条件分支**
+
+```
+Input → Router → Agent A (if condition A)
+               → Agent B (if condition B)
+               → Agent C (if condition C)
+```
+
+适用：根据输入特征选择不同的专家 Agent
+例子：技术问题 → 代码 Agent，商务问题 → 文案 Agent
+
+```typescript
+const intent = await classifierAgent.run(userInput)
+const agent = intent === 'code' ? codeAgent
+           : intent === 'business' ? copyAgent
+           : generalAgent
+const result = await agent.run(userInput)
+```
+
+**选择判断树：**
+
+1. 任务之间有顺序依赖 → 流水线
+2. 任务之间相互独立 → 扇出
+3. 任务类型需要分流 → 路由
+4. 以上都有 → 组合使用，但要保持可读性
+
+最常见的错误：把所有东西做成扇出，但其中有些 Agent 实际上依赖其他 Agent 的输出。先画依赖图，再选架构。
