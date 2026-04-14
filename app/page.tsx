@@ -4,7 +4,7 @@ import PostCard from '@/components/PostCard'
 import { MobileMenuButton } from '@/components/MobileDrawer'
 import { u } from '@/lib/url'
 
-const CHANNELS = ['daily', 'mental-models', 'templates', 'community'] as Channel[]
+const CHANNELS = ['daily', 'mental-models'] as Channel[]
 
 function FilterTab({ label, href, active }: { label: string; href: string; active: boolean }) {
   return (
@@ -86,10 +86,10 @@ export default function Home() {
               padding: '20px',
             }}>
               <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '8px' }}>
-                ⭐️ Pro 会员
+                一起研究 Claude Code
               </div>
               <p style={{ fontSize: '12px', color: 'var(--text2)', lineHeight: 1.65, marginBottom: '14px' }}>
-                30+ 实战模板、Multi-agent 架构图纸、每月深度文章、Discord 直接问我。
+                每天一条工程思考，跟真实在用 Claude Code 的人一起讨论。
               </p>
               <a href={u('/pro')} style={{
                 display: 'block',
@@ -101,7 +101,7 @@ export default function Home() {
                 textDecoration: 'none',
                 fontSize: '12px',
                 fontWeight: 600,
-              }}>了解详情 →</a>
+              }}>加入即刻圈子 →</a>
             </div>
 
             <div>

@@ -3,7 +3,7 @@ import PostCard from '@/components/PostCard'
 import { getAllPosts, CHANNEL_META, Channel } from '@/lib/content'
 import { u } from '@/lib/url'
 
-const CHANNELS = ['daily', 'mental-models', 'templates', 'community'] as Channel[]
+const CHANNELS = ['daily', 'mental-models'] as Channel[]
 
 export default function FeedPage() {
   const allPosts = getAllPosts()
@@ -72,10 +72,10 @@ export default function FeedPage() {
               padding: '20px',
             }}>
               <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '8px' }}>
-                ⭐️ Pro 会员
+                一起研究 Claude Code
               </div>
               <p style={{ fontSize: '12px', color: 'var(--text2)', lineHeight: 1.65, marginBottom: '14px' }}>
-                30+ 实战模板、Multi-agent 架构图纸、每月深度文章、Discord 直接问我。
+                每天一条工程思考，跟真实在用 Claude Code 的人一起讨论。
               </p>
               <a href={u('/pro')} style={{
                 display: 'block',
@@ -87,7 +87,7 @@ export default function FeedPage() {
                 textDecoration: 'none',
                 fontSize: '12px',
                 fontWeight: 600,
-              }}>了解详情 →</a>
+              }}>加入即刻圈子 →</a>
             </div>
 
             {/* Channels */}
@@ -127,7 +127,7 @@ export default function FeedPage() {
                 关注作者，第一时间获取更新
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <a href="https://x.com" target="_blank" rel="noopener" style={{
+                <a href="https://x.com/0xhaoxyz" target="_blank" rel="noopener" style={{
                   flex: 1,
                   textAlign: 'center',
                   padding: '6px',
@@ -137,7 +137,7 @@ export default function FeedPage() {
                   textDecoration: 'none',
                   fontSize: '12px',
                 }}>𝕏 Twitter</a>
-                <a href="https://github.com" target="_blank" rel="noopener" style={{
+                <a href="https://web.okjike.com/u/9C10E4D1-B28F-46F1-A399-A6170657E3E1" target="_blank" rel="noopener" style={{
                   flex: 1,
                   textAlign: 'center',
                   padding: '6px',
@@ -146,7 +146,7 @@ export default function FeedPage() {
                   color: 'var(--text2)',
                   textDecoration: 'none',
                   fontSize: '12px',
-                }}>GitHub</a>
+                }}>即刻</a>
               </div>
             </div>
           </aside>
