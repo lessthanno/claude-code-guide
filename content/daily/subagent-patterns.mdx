@@ -1,0 +1,42 @@
+---
+title: "Claude Code Sub-agent：什么时候拆，什么时候不拆"
+date: "2026-04-15"
+tags: ["claude-code", "multi-agent", "架构"]
+pro: false
+---
+
+Sub-agent 不是越多越好，也不是越少越好。
+
+**什么时候拆成 sub-agent：**
+
+任务之间相互独立（正交）时。比如"生成 5 个不同平台的文案变体"——每个变体不依赖其他，可以并行。或者"分析 10 篇文章的关键词"——每篇独立处理。
+
+**什么时候不拆：**
+
+任务有顺序依赖时。"先写大纲，再根据大纲写正文"——后者依赖前者，拆了反而增加协调成本。一个对话完成即可。
+
+**实际判断方法：**
+
+> 修改 agent A 的 prompt 或输出，agent B 的逻辑需要改变吗？
+> 
+> 需要 → 串行，不拆。
+> 不需要 → 可以并行，考虑拆。
+
+**拆了之后的注意事项：**
+
+```typescript
+// 错误：并行 agent 的结果互相依赖
+const [text, image] = await Promise.all([
+  generateText(topic),
+  generateImage(topic), // 实际需要 text 来确定风格
+]);
+
+// 正确：先串行获取依赖数据，再并行执行独立任务
+const text = await generateText(topic);
+const [image, schedule] = await Promise.all([
+  generateImage(text),  // 现在可以用 text
+  planSchedule(text),   // 独立于 image
+]);
+```
+
+Sub-agent 的本质是把复杂度拆小，但拆错了反而增加复杂度。
