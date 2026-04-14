@@ -61,13 +61,39 @@ function markdownToHtml(md: string): string {
         .replace(/^# (.+)$/m, '<h1>$1</h1>')
     }
 
-    // 列表
+    // 有序列表
+    if (/^\d+\. /.test(block)) {
+      const items = block.split('\n')
+        .filter(l => l.trim())
+        .map(l => `<li>${l.replace(/^\d+\. /, '').trim()}</li>`)
+        .join('')
+      return `<ol>${items}</ol>`
+    }
+
+    // 无序列表
     if (/^- /.test(block)) {
       const items = block.split('\n')
         .filter(l => l.trim())
         .map(l => `<li>${l.replace(/^- /, '').trim()}</li>`)
         .join('')
       return `<ul>${items}</ul>`
+    }
+
+    // Markdown 表格（| col | col |）
+    if (/^\|.+\|/.test(block)) {
+      const lines = block.split('\n').filter(l => l.trim())
+      const rows = lines.filter(l => !/^\|[-: |]+\|/.test(l))
+      const header = rows[0]
+      const body = rows.slice(1)
+      const parseRow = (line: string, tag: string) =>
+        '<tr>' + line.split('|').slice(1, -1).map(cell => `<${tag}>${cell.trim()}</${tag}>`).join('') + '</tr>'
+      return `<table class="md-table"><thead>${parseRow(header, 'th')}</thead><tbody>${body.map(r => parseRow(r, 'td')).join('')}</tbody></table>`
+    }
+
+    // 引用块
+    if (/^> /.test(block)) {
+      const content = block.split('\n').map(l => l.replace(/^> ?/, '')).join(' ')
+      return `<blockquote>${content}</blockquote>`
     }
 
     // 普通段落（多行合并）
