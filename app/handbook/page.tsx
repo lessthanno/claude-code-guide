@@ -12,6 +12,7 @@ const CHAPTERS = [
   { id: 'attractor', num: '05', name: '奇异吸引子', domain: 'System Prompt 设计', tag: 'tag-phys', label: '物理' },
   { id: 'entropy',   num: '06', name: '香农熵',     domain: 'Prompt 诊断',       tag: 'tag-info', label: '信息' },
   { id: 'pareto',    num: '07', name: '帕累托前沿', domain: '架构决策',          tag: 'tag-math', label: '数学' },
+  { id: 'bayes',     num: '08', name: '贝叶斯更新', domain: 'Claude 能力评估',   tag: 'tag-math', label: '数学' },
 ]
 
 function getHandbookContent(): string {

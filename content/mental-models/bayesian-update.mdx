@@ -1,0 +1,157 @@
+---
+num: "08"
+title: "贝叶斯更新 · Bayesian Update"
+titleEn: "Bayesian Update"
+subtitle: "概率论 · 用于动态调整对 Claude 能力的判断"
+domain: math
+tags: ["prompt", "mental-model", "evaluation"]
+date: "2026-04-14"
+pro: false
+---
+
+
+<div class="concept" id="bayes">
+    <div class="concept-header">
+      <div class="concept-num">08</div>
+      <div class="concept-title-block">
+        <h2>贝叶斯更新 · Bayesian Update</h2>
+        <div class="concept-subtitle">概率论 · 用于动态调整对 Claude 能力的判断</div>
+      </div>
+      <span class="domain-badge tag-math">数学</span>
+    </div>
+
+    <div class="block">
+      <div class="block-label">核心公式</div>
+      <div class="formula">P(H|E) = P(E|H) · P(H) / P(E)
+
+H = 假设（Claude 能/不能做某件事）
+E = 证据（实际观测到的输出）
+
+先验 P(H)：做这件事之前，你对 Claude 能力的估计
+似然 P(E|H)：如果假设成立，观测到这个证据的概率
+后验 P(H|E)：看到证据后，更新的能力判断</div>
+      <div class="formula-note">关键直觉：不要用单次失败/成功来彻底改变判断。要积累证据，逐步更新。</div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Claude Code 场景 — 能力边界探测</div>
+      <div class="scenario">
+        <div class="scenario-tag">真实场景</div>
+        <p>你不确定 Claude 能否在大型代码库里找到隐藏的 bug。第一次尝试失败了——这是否意味着它完全做不到？贝叶斯框架告诉你怎么更新判断。</p>
+      </div>
+      <table class="decision-table">
+        <tr><th>先验（你的预期）</th><th>证据（观测结果）</th><th>后验（更新后的判断）</th></tr>
+        <tr>
+          <td>Claude 能处理这类任务（70%）</td>
+          <td class="signal">成功了 3/3 次</td>
+          <td class="action">提升到 ~92%，可以信任</td>
+        </tr>
+        <tr>
+          <td>Claude 能处理这类任务（70%）</td>
+          <td class="signal">失败了 1 次</td>
+          <td class="action">降到 ~55%，再测 2-3 次再决策</td>
+        </tr>
+        <tr>
+          <td>Claude 能处理这类任务（70%）</td>
+          <td class="signal">失败了 3/3 次</td>
+          <td class="action">降到 ~28%，考虑换方案</td>
+        </tr>
+        <tr>
+          <td>不确定（50%）</td>
+          <td class="signal">成功 1 次，失败 1 次</td>
+          <td class="action">仍然 ~50%，需要更多证据</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="block-label">代码模式 — Capability Probe</div>
+      <div class="code-header">
+        <span>capability-probe.ts</span>
+        <span>Claude Code 评估脚本</span>
+      </div>
+<pre><span class="cm">// 贝叶斯能力探测：用小样本测试更新对 Claude 的能力判断</span>
+<span class="kw">class</span> <span class="var">CapabilityBayes</span> {
+  <span class="kw">private</span> prior: <span class="kw">number</span>;      <span class="cm">// 初始估计 0-1</span>
+  <span class="kw">private</span> successes = <span class="num">0</span>;
+  <span class="kw">private</span> trials = <span class="num">0</span>;
+
+  <span class="kw">constructor</span>(prior = <span class="num">0.5</span>) {
+    <span class="kw">this</span>.prior = prior;
+  }
+
+  <span class="cm">// Beta-Binomial 更新（贝叶斯最简实现）</span>
+  <span class="fn">update</span>(success: <span class="kw">boolean</span>): <span class="kw">void</span> {
+    <span class="kw">this</span>.trials++;
+    <span class="kw">if</span> (success) <span class="kw">this</span>.successes++;
+  }
+
+  <span class="fn">posterior</span>(): <span class="kw">number</span> {
+    <span class="cm">// α = prior × 10（等效先验样本），β = (1-prior) × 10</span>
+    <span class="kw">const</span> alpha = <span class="kw">this</span>.prior * <span class="num">10</span> + <span class="kw">this</span>.successes;
+    <span class="kw">const</span> beta = (<span class="num">1</span> - <span class="kw">this</span>.prior) * <span class="num">10</span> + (<span class="kw">this</span>.trials - <span class="kw">this</span>.successes);
+    <span class="kw">return</span> alpha / (alpha + beta);
+  }
+
+  <span class="fn">decision</span>(): <span class="str">'trust' | 'uncertain' | 'fallback'</span> {
+    <span class="kw">const</span> p = <span class="kw">this</span>.<span class="fn">posterior</span>();
+    <span class="kw">if</span> (p > <span class="num">0.8</span>) <span class="kw">return</span> <span class="str">'trust'</span>;     <span class="cm">// 可以依赖</span>
+    <span class="kw">if</span> (p > <span class="num">0.4</span>) <span class="kw">return</span> <span class="str">'uncertain'</span>; <span class="cm">// 需要更多测试</span>
+    <span class="kw">return</span> <span class="str">'fallback'</span>;                 <span class="cm">// 换方案</span>
+  }
+}
+
+<span class="cm">// 用法：评估 Claude 是否能可靠完成某类任务</span>
+<span class="kw">const</span> probe = <span class="kw">new</span> <span class="var">CapabilityBayes</span>(<span class="num">0.6</span>); <span class="cm">// 先验 60%</span>
+
+<span class="kw">for</span> (<span class="kw">const</span> testCase <span class="kw">of</span> testCases) {
+  <span class="kw">const</span> result = <span class="kw">await</span> claudeAgent.<span class="fn">run</span>(testCase);
+  probe.<span class="fn">update</span>(<span class="fn">evaluate</span>(result, testCase.expected));
+  
+  console.<span class="fn">log</span>(<span class="str">`后验: ${(probe.posterior() * 100).toFixed(0)}% | 决策: ${probe.decision()}`</span>);
+  
+  <span class="kw">if</span> (probe.<span class="fn">decision</span>() !== <span class="str">'uncertain'</span>) <span class="kw">break</span>; <span class="cm">// 有了足够证据就停</span>
+}
+
+<span class="cm">// trust → 部署；uncertain → 继续测；fallback → 换模型/换策略</span></pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>⚠ 反模式</strong>
+      用单次测试结论化判断 Claude 的能力。"试了一次，不行，Claude 做不到这个。" 这是点估计，不是概率估计。单次失败只是一个数据点，会把 70% 的先验更新到 55%，不是 0%。
+    </div>
+
+    <div class="quick-ref">
+      <h4>判断需要多少次测试</h4>
+      <ul>
+        <li>先验强（90%+）：失败 3 次才触发重新评估</li>
+        <li>先验中（50-70%）：5 次混合结果就能给出明确方向</li>
+        <li>先验弱（&lt;30%）：成功 2-3 次即可提升信心</li>
+        <li>规则：后验超过 80% 或低于 20%，才算有足够证据做决策</li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <div class="block-label">拿走就能用 — 粘贴进你的 CLAUDE.md</div>
+      <div class="code-header">
+        <span>CLAUDE.md</span>
+        <span>能力评估规则</span>
+      </div>
+<pre><span class="cm">## Claude 能力评估规则（贝叶斯原则）
+
+### 禁止单次定论
+- 1 次失败 ≠ "Claude 做不到"
+- 1 次成功 ≠ "Claude 可以可靠依赖"
+- 需要 3-5 次测试，再决策
+
+### 评估触发条件
+- 新类型任务：先跑 3 个样本测试，再集成到主流程
+- 质量波动大：增加测试次数，确认是偶然还是系统性
+
+### 决策阈值
+- &gt;80% 成功率（3+ 次测试）→ 可以依赖
+- 40-80%：继续测，或加 retry 逻辑
+- &lt;40% → 换策略：改 prompt、换模型、或人工介入</span></pre>
+    </div>
+  </div>
+
