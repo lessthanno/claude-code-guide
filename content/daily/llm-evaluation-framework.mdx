@@ -1,0 +1,125 @@
+---
+title: "LLM 应用的评估框架：怎么知道你的 AI 功能真的工作了"
+date: "2026-05-13"
+tags: ["claude-code", "llm", "evaluation", "testing", "ai-quality"]
+pro: true
+---
+
+"我测试了一下，效果还不错"——这不是 LLM 应用的评估，这是 vibes check。如果你在生产环境里跑 AI 功能，你需要一个真正的评估框架。
+
+**评估的三个层次：**
+
+**1. 确定性测试（Deterministic Tests）**
+
+对于有确定答案的部分：
+
+```python
+def test_json_parsing():
+    """Claude 的 JSON 输出必须能被解析"""
+    response = call_claude(prompt)
+    try:
+        data = json.loads(response)
+        assert "category" in data
+        assert data["confidence"] >= 0.0
+        assert data["confidence"] <= 1.0
+    except (json.JSONDecodeError, KeyError, AssertionError) as e:
+        pytest.fail(f"Response format invalid: {e}")
+```
+
+**2. 基于规则的测试（Rule-based Tests）**
+
+对于有明确约束的输出：
+
+```python
+def test_code_review_safety():
+    """代码审查输出不应包含敏感信息"""
+    response = call_code_review(code_with_secrets)
+    
+    # 不应该把密钥输出出来
+    assert "sk-" not in response
+    assert "password" not in response.lower()
+    
+    # 应该包含安全警告
+    assert any(word in response.lower() 
+               for word in ["secret", "credential", "sensitive"])
+```
+
+**3. 模型评估（Model-based Evaluation）**
+
+让另一个 Claude 来评估输出质量：
+
+```python
+def evaluate_with_llm(question, expected_behavior, actual_response):
+    eval_prompt = f"""
+    任务：评估 AI 助手的回复质量
+    
+    用户问题：{question}
+    期望行为：{expected_behavior}
+    实际回复：{actual_response}
+    
+    评估标准：
+    1. 准确性（0-5）：回答是否正确
+    2. 完整性（0-5）：是否回答了所有要求
+    3. 安全性（pass/fail）：是否有危险内容
+    
+    输出 JSON：{{"accuracy": N, "completeness": N, "safe": true/false, "reason": "..."}}
+    """
+    
+    return json.loads(call_claude(eval_prompt))
+```
+
+**建立测试集：**
+
+```bash
+claude "帮我建立一个评估测试集：
+AI 功能：客服自动回复（账单查询类）
+
+需要覆盖：
+1. 正常场景（50%）：常见账单问题
+2. 边界场景（30%）：复杂或模糊的问题
+3. 对抗场景（20%）：试图让 AI 做不该做的事
+
+每个测试用例包含：
+- 输入（用户消息）
+- 期望行为（不一定是具体文字）
+- 通过标准（如何判断是否成功）
+
+生成 20 个测试用例。"
+```
+
+**回归测试：**
+
+```python
+# 每次改动 prompt 或模型时跑
+def regression_test():
+    results = []
+    for case in test_cases:
+        response = call_ai(case.input)
+        score = evaluate_response(case, response)
+        results.append(score)
+    
+    avg_score = sum(results) / len(results)
+    
+    # 回归：平均分不能比基准下降超过 5%
+    assert avg_score >= BASELINE_SCORE * 0.95, \
+        f"Regression detected: {avg_score:.2f} vs baseline {BASELINE_SCORE:.2f}"
+```
+
+**在 Claude Code 里构建评估流程：**
+
+```bash
+claude "帮我为这个 AI 代码 review 功能建立评估流程：
+
+功能：对 PR diff 做安全审查
+
+已有：
+- 30 个人工标注的测试用例（真实 PR diff + 期望的安全问题）
+
+需要：
+1. 自动化评估脚本
+2. 指标：precision（准确率）、recall（召回率）、误报率
+3. 设定最低通过门槛（precision > 80%，recall > 70%）
+4. CI 集成：每次改动 prompt 自动跑评估"
+```
+
+没有评估框架的 LLM 应用，发布就是在赌博。评估框架让你把"好像没问题"变成"我有数据支持它在生产里工作"。
