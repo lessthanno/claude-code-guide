@@ -1,0 +1,101 @@
+---
+title: "用 Claude Code 搭建项目骨架：从 0 到可运行的标准结构"
+date: "2026-04-28"
+tags: ["claude-code", "scaffolding", "project-setup", "workflow"]
+pro: false
+---
+
+每次新项目都从空目录开始搭基础结构很浪费时间。Claude Code 可以在 5 分钟内生成符合你团队规范的项目骨架。
+
+**描述你的约束，不要描述"怎么做"：**
+
+```bash
+claude "创建一个 Go HTTP API 项目骨架：
+- 框架：标准库 net/http（不用 gin/echo）
+- 架构：handler → service → repository
+- 数据库：PostgreSQL（用 pgx v5）
+- 认证：JWT，放在 middleware
+- 配置：环境变量，用 godotenv
+- 日志：结构化日志，用 slog（Go 1.21+）
+- 测试：每层都有测试文件，用 testify
+
+目录结构，然后生成核心文件的骨架代码。"
+```
+
+**生成的结构示例：**
+
+```
+myapi/
+├── cmd/server/main.go
+├── internal/
+│   ├── handler/
+│   │   ├── user.go
+│   │   └── user_test.go
+│   ├── service/
+│   │   ├── user.go
+│   │   └── user_test.go
+│   ├── repository/
+│   │   ├── user.go
+│   │   └── user_test.go
+│   └── middleware/
+│       └── auth.go
+├── pkg/
+│   ├── config/config.go
+│   └── logger/logger.go
+├── migrations/
+├── .env.example
+├── Makefile
+└── go.mod
+```
+
+**生成 Makefile：**
+
+```bash
+claude "生成这个项目的 Makefile：
+- make run：启动开发服务器
+- make test：运行所有测试（带 race detector）
+- make test-cover：生成覆盖率报告
+- make lint：运行 golangci-lint
+- make migrate-up/down：执行数据库迁移
+- make build：编译生产版本
+
+用 help 目标列出所有命令。"
+```
+
+**生成 Docker 配置：**
+
+```bash
+claude "生成这个 Go 项目的 Dockerfile：
+- 使用多阶段构建（builder + runtime）
+- runtime 阶段用 distroless/static
+- 包含健康检查
+- 最终镜像不超过 30MB
+
+同时生成 docker-compose.yml，包含：
+- app 服务
+- postgres（带 init script）
+- redis（用于 session）"
+```
+
+**生成 CI/CD 流程：**
+
+```bash
+claude "生成 GitHub Actions workflow：
+- PR：运行测试 + lint
+- merge to main：测试 + build Docker image + push to registry
+- 使用缓存加速 Go module 下载
+- 并行运行不同的测试包"
+```
+
+**把现有项目的规范告诉 Claude：**
+
+最有效的方式是先让 Claude 读现有项目，再生成新项目：
+
+```bash
+claude "先读 src/services/user.go 和 src/repositories/user.go，
+理解我们现有的代码模式。
+然后为 notification 模块生成相同风格的骨架代码：
+service 层 + repository 层 + 测试文件。"
+```
+
+这样生成的代码会直接符合你团队的习惯，而不是 Claude 的默认风格。

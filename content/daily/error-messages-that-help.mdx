@@ -1,0 +1,88 @@
+---
+title: "让错误信息真正有用：用 Claude 重写你的错误处理"
+date: "2026-04-27"
+tags: ["claude-code", "error-handling", "ux", "debugging"]
+pro: false
+---
+
+大多数错误信息只对写代码的人有意义。"unexpected nil pointer dereference"告诉用户什么了？什么也没有。
+
+**让 Claude 审查现有错误信息：**
+
+```bash
+claude "扫描 src/handlers/ 里所有返回给前端的错误响应。
+评估每个错误信息：
+1. 用户看到后能做什么？（可操作性）
+2. 是否暴露了内部实现细节？（安全性）
+3. 是否足够定位问题？（可调试性）
+
+列出最差的 5 个，并给出改写建议。"
+```
+
+**典型的坏错误信息 vs 好错误信息：**
+
+```go
+// 坏：对用户无意义
+return errors.New("sql: no rows in result set")
+
+// 好：告诉用户发生了什么，能做什么
+return ErrNotFound{
+    Resource: "order",
+    ID:       orderID,
+    Message:  "该订单不存在或已被删除",
+}
+```
+
+**让 Claude 建立错误层级：**
+
+```bash
+claude "基于 src/ 目录里的错误处理现状，
+设计一个分层的错误体系：
+- 用户可见错误（前端显示）
+- 运维可见错误（告警/日志）
+- 开发可见错误（调试信息）
+
+每层应该包含哪些信息，格式是什么？
+参考我们现有的模式，不要引入新的框架。"
+```
+
+**生成标准化的错误码：**
+
+```bash
+claude "为 payment service 设计一套错误码规范：
+- 格式：PAY_XXXX（前缀 + 4 位数字）
+- 覆盖：参数错误、权限错误、支付失败的各种子原因、系统错误
+- 每个错误码附带：HTTP 状态码、用户提示文案、是否需要告警
+
+输出为可直接复制到代码里的 Go const 定义。"
+```
+
+**错误信息本地化：**
+
+```bash
+claude "把 errors/payment_errors.go 里的错误信息：
+1. 提取成单独的 i18n key
+2. 生成 zh-CN 和 en-US 两套文案
+3. 中文版要口语化（用户友好），英文版要技术准确（开发者友好）"
+```
+
+**包含上下文的错误追踪：**
+
+```go
+// 让 Claude 改写这种模式
+if err != nil {
+    return err  // 信息丢失
+}
+
+// 改成这种
+if err != nil {
+    return fmt.Errorf("createOrder: charging user %d: %w", userID, err)
+}
+```
+
+```bash
+claude "在 src/ 目录里找出所有直接 return err 的地方（没有 wrap），
+按模块列出，优先处理 handler 层和 service 层。"
+```
+
+好的错误信息是给未来的自己的礼物——3 个月后凌晨 2 点处理 on-call，你会感谢现在写了有意义的错误信息的你。
