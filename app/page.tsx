@@ -1,4 +1,4 @@
-import { getAllPosts, CHANNEL_META, Channel } from '@/lib/content'
+import { getAllPosts, getChannelPosts, CHANNEL_META, Channel } from '@/lib/content'
 import Sidebar from '@/components/Sidebar'
 import PostCard from '@/components/PostCard'
 import { MobileMenuButton } from '@/components/MobileDrawer'
@@ -24,6 +24,8 @@ function FilterTab({ label, href, active }: { label: string; href: string; activ
 
 export default function Home() {
   const allPosts = getAllPosts()
+  const dailyCount = getChannelPosts('daily').length
+  const modelCount = getChannelPosts('mental-models').length
 
   return (
     <div className="layout-root">
@@ -110,6 +112,7 @@ export default function Home() {
               </div>
               {CHANNELS.map(ch => {
                 const meta = CHANNEL_META[ch]
+                const count = ch === 'daily' ? dailyCount : ch === 'mental-models' ? modelCount : 0
                 return (
                   <a key={ch} href={u(`/c/${ch}`)} style={{
                     display: 'flex',
@@ -120,10 +123,13 @@ export default function Home() {
                     textDecoration: 'none',
                   }}>
                     <span style={{ fontSize: '16px' }}>{meta.emoji}</span>
-                    <div>
+                    <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500 }}>{meta.label}</div>
                       <div style={{ fontSize: '11px', color: 'var(--text3)' }}>{meta.desc}</div>
                     </div>
+                    {count > 0 && (
+                      <span style={{ fontSize: '11px', color: 'var(--text3)', fontFamily: 'var(--mono)', flexShrink: 0 }}>{count}</span>
+                    )}
                   </a>
                 )
               })}
