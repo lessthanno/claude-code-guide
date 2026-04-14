@@ -1,0 +1,29 @@
+---
+title: "Claude 的「断崖」：context 超过临界点会发生什么"
+date: "2026-04-13"
+tags: ["claude-code", "context", "调优"]
+pro: false
+---
+
+Claude 的输出质量不是随 context 变长而线性下降的。
+
+它是**断崖式的**。
+
+在临界点之前，一切正常。超过之后，模型开始跳过指令、幻觉增加、前面说的话忘掉。这不是 bug，是统计物理里的相变——就像水在 100°C 突然变成蒸汽。
+
+**实测大概在 60-70% 窗口时开始恶化，80% 以上明显失控。**
+
+所以不要等到出问题才处理。要主动设硬限制：
+
+```typescript
+// 不是"快满了就提示"，是"到了就截断"
+const CONTEXT_HARD_LIMIT = 0.65; // 窗口的 65%
+
+if (contextUsage > CONTEXT_HARD_LIMIT) {
+  compressAndSummarize(messages);
+}
+```
+
+对话太长时，用 `/compact` 压缩而不是继续堆。
+
+新任务开新对话。这不是习惯问题，是工程约束。

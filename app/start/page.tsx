@@ -20,17 +20,17 @@ const STEPS = [
   },
   {
     num: '03',
-    title: '深入单个频道',
-    desc: '日报 / 思维模型 / 模板库 / 社区讨论 — 每个频道有独立的内容深度。',
+    title: '看日报',
+    desc: '每天一条工程思考：Claude Code 实践、调优经验、踩坑记录。短但有料。',
     href: '/c/daily',
     label: '看日报 →',
   },
   {
     num: '04',
-    title: '加入 Pro（可选）',
-    desc: '获取可直接复用的模板、架构图纸和每月深度内容。',
+    title: '加入即刻圈子',
+    desc: '跟真实在用 Claude Code 的工程师一起讨论。比文章更快，比教程更真实。',
     href: '/pro',
-    label: '了解 Pro →',
+    label: '去社群 →',
   },
 ]
 
