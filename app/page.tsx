@@ -24,8 +24,11 @@ function FilterTab({ label, href, active }: { label: string; href: string; activ
 
 export default function Home() {
   const allPosts = getAllPosts()
-  const dailyCount = getChannelPosts('daily').length
-  const modelCount = getChannelPosts('mental-models').length
+  const dailyPosts = getChannelPosts('daily')
+  const modelPosts = getChannelPosts('mental-models')
+  const dailyCount = dailyPosts.length
+  const modelCount = modelPosts.length
+  const proCount = allPosts.filter(p => p.pro).length
 
   return (
     <div className="layout-root">
@@ -87,12 +90,33 @@ export default function Home() {
               borderRadius: '8px',
               padding: '20px',
             }}>
-              <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '8px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '12px' }}>
                 一起研究 Claude Code
               </div>
-              <p style={{ fontSize: '12px', color: 'var(--text2)', lineHeight: 1.65, marginBottom: '14px' }}>
-                每天一条工程思考，跟真实在用 Claude Code 的人一起讨论。
-              </p>
+              {/* Stats */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '8px',
+                marginBottom: '14px',
+              }}>
+                {[
+                  { label: '篇实战文章', value: dailyCount },
+                  { label: '个思维模型', value: modelCount },
+                  { label: 'Pro 深度文章', value: proCount },
+                  { label: '天持续更新', value: Math.round((new Date().getTime() - new Date('2026-04-01').getTime()) / 86400000) },
+                ].map(({ label, value }) => (
+                  <div key={label} style={{
+                    background: 'var(--bg3)',
+                    borderRadius: '6px',
+                    padding: '8px 10px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--accent)', fontFamily: 'var(--mono)' }}>{value}</div>
+                    <div style={{ fontSize: '10px', color: 'var(--text3)', marginTop: '2px' }}>{label}</div>
+                  </div>
+                ))}
+              </div>
               <a href={u('/pro')} style={{
                 display: 'block',
                 textAlign: 'center',
@@ -103,7 +127,7 @@ export default function Home() {
                 textDecoration: 'none',
                 fontSize: '12px',
                 fontWeight: 600,
-              }}>加入即刻圈子 →</a>
+              }}>⭐️ 加入即刻圈子 →</a>
             </div>
 
             <div>
